@@ -55,7 +55,7 @@ graalvmNative {
             imageName.set("wce")
             quickBuild.set(true)
             buildArgs.add("--strict-image-heap")
-            buildArgs.add("-R:MaxHeapSize=64M")
+            buildArgs.add("-R:MaxHeapSize=128M")
         }
         binaries.all {
             resources.autodetect()
