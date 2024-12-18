@@ -20,12 +20,12 @@ public final class ListUnlocatedCommand implements Callable<Integer> {
 
   @Override
   public Integer call() {
-    System.out.printf("Listing nnlocated items in %s%n%n", this.jsonFile);
+    System.out.printf("Listing unlocated items in %s%n%n", this.jsonFile);
 
     List<WcResult> wcResults = getWorstCaseTrLim(jsonFile).wcResults();
 
     for (WcResult wcResult : wcResults) {
-      System.out.printf("Unlocated items for scenario ID %s%n%n", wcResult.id());
+      System.out.printf("Unlocated items for scenario ID %s `%s`%n%n", wcResult.id(), wcResult.title());
 
       {
         List<Bus> unlocatedBuses = wcResult.buses().stream().filter(FILTER).toList();
