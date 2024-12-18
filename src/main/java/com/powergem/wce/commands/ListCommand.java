@@ -8,7 +8,8 @@ import java.util.concurrent.Callable;
         name = "list",
         subcommands = {
                 ListConstraintsCommand.class,
-                ListScenariosCommand.class
+                ListScenariosCommand.class,
+                ListUnlocatedCommand.class
         },
         usageHelpWidth = 132
 )
