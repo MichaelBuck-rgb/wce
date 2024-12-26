@@ -16,8 +16,8 @@ import java.util.function.Function;
 
 import static com.powergem.wce.Utils.getConnection;
 
-@CommandLine.Command(name = "flowgates")
-public class ListFlowgatesCommand implements Callable<Integer> {
+@CommandLine.Command(name = "constraints")
+public class ListConstraintsCommand implements Callable<Integer> {
   @CommandLine.Parameters(index = "1", description = "The ID of the bus to get the constraints of.")
   private int busid;
 

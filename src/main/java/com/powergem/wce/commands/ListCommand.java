@@ -7,7 +7,7 @@ import java.util.concurrent.Callable;
 @CommandLine.Command(
         name = "list",
         subcommands = {
-                ListFlowgatesCommand.class,
+                ListConstraintsCommand.class,
                 ListScenariosCommand.class,
                 ListUnlocatedCommand.class
         },
