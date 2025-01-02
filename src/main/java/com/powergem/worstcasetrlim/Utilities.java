@@ -1,5 +1,7 @@
 package com.powergem.worstcasetrlim;
 
+import com.fasterxml.jackson.annotation.JsonSetter;
+import com.fasterxml.jackson.annotation.Nulls;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectReader;
 import com.powergem.worstcasetrlim.model.WorstCaseTrLim;
@@ -17,6 +19,8 @@ public final class Utilities {
 
   public static WorstCaseTrLim getWorstCaseTrLim(Path file) {
     ObjectMapper objectMapper = new ObjectMapper();
+    objectMapper.setDefaultSetterInfo(JsonSetter.Value.forValueNulls(Nulls.AS_EMPTY));
+
     ObjectReader objectReader = objectMapper.readerFor(WorstCaseTrLim.class);
 
     try (InputStream inputStream = Files.newInputStream(file)) {
