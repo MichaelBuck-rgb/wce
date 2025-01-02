@@ -3,14 +3,12 @@ package com.powergem.wce;
 import com.powergem.worstcasetrlim.Utilities;
 import com.powergem.worstcasetrlim.model.*;
 
-import java.io.IOException;
-import java.io.UncheckedIOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.sql.*;
 import java.util.Collection;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 public final class Importer {
   private static final String BUSES_CREATE_TABLE = "CREATE TABLE buses (id INTEGER, busnum INTEGER, busname TEXT, busvolt REAL, busarea TEXT, trlim REAL, lat REAL, lon REAL)";
@@ -32,12 +30,6 @@ public final class Importer {
 
   public static void importData(Path file, Connection connection) {
     WorstCaseTrLim worstCaseTrLim = Utilities.getWorstCaseTrLim(file);
-
-    try {
-      Files.deleteIfExists(Paths.get("worstcasetrlim.sqlite"));
-    } catch (IOException e) {
-      throw new UncheckedIOException(e);
-    }
 
     worstCaseTrLim = decrypt(worstCaseTrLim);
 
@@ -153,13 +145,13 @@ public final class Importer {
 
     for (Flowgate flowgate : flowgates) {
       int[] frBuses = flowgate.frBuses();
-      String frBusesJsonArrayTemplate = "?".repeat(frBuses.length);
+      String frBusesJsonArrayTemplate = toJsonArrayTemplate(frBuses.length);
 
       int[] toBuses = flowgate.toBuses();
-      String toBusesJsonArrayTemplate = "?".repeat(toBuses.length);
+      String toBusesJsonArrayTemplate = toJsonArrayTemplate(toBuses.length);
 
       int[] monType = flowgate.monType();
-      String monTypeJsonArrayTemplate = "?".repeat(monType.length);
+      String monTypeJsonArrayTemplate = toJsonArrayTemplate(monType.length);
 
       String statementTemplate = "INSERT INTO flowgates VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, " + frBusesJsonArrayTemplate + ", " + toBusesJsonArrayTemplate + ", " + monTypeJsonArrayTemplate + ")";
 
@@ -188,6 +180,8 @@ public final class Importer {
         }
 
         statement.execute();
+      } catch (SQLException e) {
+        throw new RuntimeException("Exception while writing flowgate with id " + flowgate.id(), e);
       }
     }
   }
@@ -214,6 +208,12 @@ public final class Importer {
         statement.executeBatch();
       }
     }
+  }
+
+  private static String toJsonArrayTemplate(int length) {
+    return IntStream.range(0, length)
+            .mapToObj(value -> "?")
+            .collect(Collectors.joining(",", "json_array(", ")"));
   }
 
   private static double decryptLat(double encryptedLat, double encryptedLon) {

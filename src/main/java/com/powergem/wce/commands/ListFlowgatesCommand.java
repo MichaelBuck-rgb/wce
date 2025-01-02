@@ -94,7 +94,7 @@ public class ListFlowgatesCommand implements Callable<Integer> {
     }
 
     return 0;
-}
+  }
 
   private static Bus toBus(ResultSet resultSet) throws SQLException {
     return new Bus(
@@ -110,23 +110,23 @@ public class ListFlowgatesCommand implements Callable<Integer> {
   }
 
   private static int[] toIntArray(String strJson) throws JsonProcessingException {
-  ObjectMapper objectMapper = new ObjectMapper();
-  return objectMapper.readValue(strJson, int[].class);
-}
+    ObjectMapper objectMapper = new ObjectMapper();
+    return objectMapper.readValue(strJson, int[].class);
+  }
 
-private static boolean isTransmissionLine(int monType) {
-  return monType == 1;
-}
+  private static boolean isTransmissionLine(int monType) {
+    return monType == 1;
+  }
 
-private static BranchTerminal from(ResultSet rs) throws SQLException {
-  int id = rs.getInt("id");
-  String name = rs.getString("name");
-  double kv = rs.getDouble("kv");
-  int areaNum = rs.getInt("areaNum");
-  String areaName = rs.getString("areaName");
-  double lat = rs.getDouble("lat");
-  double lon = rs.getDouble("lon");
+  private static BranchTerminal from(ResultSet rs) throws SQLException {
+    int id = rs.getInt("id");
+    String name = rs.getString("name");
+    double kv = rs.getDouble("kv");
+    int areaNum = rs.getInt("areaNum");
+    String areaName = rs.getString("areaName");
+    double lat = rs.getDouble("lat");
+    double lon = rs.getDouble("lon");
 
-  return new BranchTerminal(id, name, kv, areaNum, areaName, lat, lon);
-}
+    return new BranchTerminal(id, name, kv, areaNum, areaName, lat, lon);
+  }
 }

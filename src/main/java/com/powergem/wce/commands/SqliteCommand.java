@@ -3,8 +3,11 @@ package com.powergem.wce.commands;
 import com.powergem.wce.Importer;
 import picocli.CommandLine;
 
+import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.concurrent.Callable;
@@ -26,6 +29,12 @@ public class SqliteCommand implements Callable<Integer> {
     if (Files.notExists(this.file)) {
       System.err.println("File '" + this.file + "' does not exist.");
       return 1;
+    }
+
+    try {
+      Files.deleteIfExists(Paths.get("worstcasetrlim.sqlite"));
+    } catch (IOException e) {
+      throw new UncheckedIOException(e);
     }
 
     try (Connection connection = getConnection("jdbc:sqlite:worstcasetrlim.sqlite")) {
