@@ -11,8 +11,6 @@ import java.nio.file.Paths;
 import java.sql.*;
 import java.util.Collection;
 import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 public final class Importer {
   private static final String BUSES_CREATE_TABLE = "CREATE TABLE buses (id INTEGER, busnum INTEGER, busname TEXT, busvolt REAL, busarea TEXT, trlim REAL, lat REAL, lon REAL)";
@@ -155,13 +153,13 @@ public final class Importer {
 
     for (Flowgate flowgate : flowgates) {
       int[] frBuses = flowgate.frBuses();
-      String frBusesJsonArrayTemplate = toJsonArrayTemplate(frBuses);
+      String frBusesJsonArrayTemplate = "?".repeat(frBuses.length);
 
       int[] toBuses = flowgate.toBuses();
-      String toBusesJsonArrayTemplate = toJsonArrayTemplate(toBuses);
+      String toBusesJsonArrayTemplate = "?".repeat(toBuses.length);
 
       int[] monType = flowgate.monType();
-      String monTypeJsonArrayTemplate = toJsonArrayTemplate(monType);
+      String monTypeJsonArrayTemplate = "?".repeat(monType.length);
 
       String statementTemplate = "INSERT INTO flowgates VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, " + frBusesJsonArrayTemplate + ", " + toBusesJsonArrayTemplate + ", " + monTypeJsonArrayTemplate + ")";
 
@@ -216,12 +214,6 @@ public final class Importer {
         statement.executeBatch();
       }
     }
-  }
-
-  private static String toJsonArrayTemplate(int[] ints) {
-    return IntStream.range(0, ints.length)
-            .mapToObj(value -> "?")
-            .collect(Collectors.joining(",", "json_array(", ")"));
   }
 
   private static double decryptLat(double encryptedLat, double encryptedLon) {
