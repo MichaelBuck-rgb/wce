@@ -1,9 +1,9 @@
 package com.powergem.wce.commands;
 
 import com.powergem.wce.Importer;
+import com.powergem.wce.Utils;
 import com.powergem.worstcasetrlim.model.Bus;
 import com.powergem.worstcasetrlim.model.Flowgate;
-import com.powergem.worstcasetrlim.model.Harmer;
 import picocli.CommandLine;
 
 import java.nio.file.Path;
@@ -15,7 +15,6 @@ import java.util.*;
 import java.util.concurrent.Callable;
 
 import static com.powergem.wce.Utils.getConnection;
-import static java.util.Collections.emptyList;
 
 @CommandLine.Command(name = "flowgates")
 public final class ListFlowgatesCommand implements Callable<Integer> {
@@ -50,7 +49,7 @@ public final class ListFlowgatesCommand implements Callable<Integer> {
         statement.setInt(1, busid);
         try (ResultSet rs = statement.executeQuery()) {
           while (rs.next()) {
-            flowgates.add(from(rs));
+            flowgates.add(Utils.toFlowgate(rs));
           }
         }
       } catch (SQLException e) {
@@ -79,23 +78,4 @@ public final class ListFlowgatesCommand implements Callable<Integer> {
     );
   }
 
-  private static Flowgate from(ResultSet rs) throws SQLException {
-    int id = rs.getInt("id");
-    int busid = rs.getInt("busid");
-    double dfax = rs.getDouble("dfax");
-    double trlim = rs.getDouble("trlim");
-    String mon = rs.getString("mon");
-    String con = rs.getString("con");
-    double rating = rs.getDouble("rating");
-    double loadingbefore = rs.getDouble("loadingbefore");
-    double loadingafter = rs.getDouble("loadingafter");
-    double mwimpact = rs.getDouble("mwimpact");
-
-    List<Harmer> harmers = emptyList();
-    int[] frBuses = new int[0];
-    int[] toBuses = new int[0];
-    int[] monType = new int[0];
-
-    return new Flowgate(id, busid, dfax, trlim, mon, con, rating, loadingbefore, loadingafter, mwimpact, harmers, frBuses, toBuses, monType);
-  }
 }
