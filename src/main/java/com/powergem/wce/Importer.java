@@ -7,22 +7,20 @@ import java.nio.file.Path;
 import java.sql.*;
 import java.util.Collection;
 import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 public final class Importer {
   private static final String BUSES_CREATE_TABLE = "CREATE TABLE buses (id INTEGER, busnum INTEGER, busname TEXT, busvolt REAL, busarea TEXT, trlim REAL, lat REAL, lon REAL)";
   private static final String BUSES_INSERT_STATEMENT_TEMPLATE = "INSERT INTO buses VALUES(?, ?, ?, ?, ?, ?, ?, ?)";
 
-  private static final String STRESSGENS_CREATE_TABLE = "CREATE TABLE stressgens (id INTEGER, busnum INTEGER, busvolt REAL, busarea TEXT, lat REAL, lon REAL)";
-  private static final String STRESSGENS_INSERT_STATEMENT_TEMPLATE = "INSERT INTO stressgens VALUES(?, ?, ?, ?, ?, ?)";
+  private static final String STRESSGENS_CREATE_TABLE = "CREATE TABLE stressgens (id INTEGER, busnum INTEGER, busname TEXT, busvolt REAL, busarea TEXT, lat REAL, lon REAL)";
+  private static final String STRESSGENS_INSERT_STATEMENT_TEMPLATE = "INSERT INTO stressgens VALUES(?, ?, ?, ?, ?, ?, ?)";
 
   private static final String BRANCHTERMINAL_CREATE_TABLE = "CREATE TABLE branchterminals (id INTEGER, name TEXT, kv REAL, areanum INTEGER, areaname TEXT, lat REAL, lon REAL)";
   private static final String BRANCHTERMINAL_INSERT_STATEMENT_TEMPLATE = "INSERT INTO branchterminals VALUES(?, ?, ?, ?, ?, ?, ?)";
 
-  private static final String FLOWGATE_CREATE_TABLE = "CREATE TABLE flowgates (id INTEGER, busid INTEGER, dfax REAL, trlim REAL, mon TEXT, con TEXT, rating REAL, loadingbefore REAL, loadingafter REAL, mwimpact REAL, frbuses TEXT, tobuses TEXT, montype TEXT)";
+  private static final String FLOWGATE_CREATE_TABLE = "CREATE TABLE flowgates (id INTEGER, busid INTEGER, dfax REAL, trlim REAL, mon TEXT, con TEXT, rating REAL, loadingbefore REAL, loadingafter REAL, mwimpact REAL)";
 
-  private static final String HARMERS_CREATE_TABLE = "CREATE TABLE harmers (id TEXT, idx INTEGER, dfax REAL, mwchange REAL, mwimpact REAL, pmax REAL, pgen REAL, flowgateid INTEGER)";
+  private static final String HARMERS_CREATE_TABLE = "CREATE TABLE harmers (id INTEGER, flowgateId INTEGER, stressGenId INTEGER, dfax REAL, mwchange REAL, mwimpact REAL, pmax REAL, pgen REAL)";
   private static final String HARMERS_INSERT_STATEMENT_TEMPLATE = "INSERT INTO harmers VALUES(?, ?, ?, ?, ?, ?, ?, ?)";
 
   private Importer() {
@@ -108,10 +106,11 @@ public final class Importer {
       for (StressGen stressGen : stressGens) {
         statement.setInt(1, stressGen.id());
         statement.setInt(2, stressGen.busnum());
-        statement.setDouble(3, stressGen.busvolt());
-        statement.setString(4, stressGen.busarea());
-        statement.setDouble(5, stressGen.lat());
-        statement.setDouble(6, stressGen.lon());
+        statement.setString(3, stressGen.busname());
+        statement.setDouble(4, stressGen.busvolt());
+        statement.setString(5, stressGen.busarea());
+        statement.setDouble(6, stressGen.lat());
+        statement.setDouble(7, stressGen.lon());
         statement.addBatch();
       }
       statement.executeBatch();
@@ -144,16 +143,17 @@ public final class Importer {
     }
 
     for (Flowgate flowgate : flowgates) {
-      int[] frBuses = flowgate.frBuses();
-      String frBusesJsonArrayTemplate = toJsonArrayTemplate(frBuses.length);
+//      int[] frBuses = flowgate.frBuses();
+//      String frBusesJsonArrayTemplate = toJsonArrayTemplate(frBuses.length);
+//
+//      int[] toBuses = flowgate.toBuses();
+//      String toBusesJsonArrayTemplate = toJsonArrayTemplate(toBuses.length);
+//
+//      int[] monType = flowgate.monType();
+//      String monTypeJsonArrayTemplate = toJsonArrayTemplate(monType.length);
 
-      int[] toBuses = flowgate.toBuses();
-      String toBusesJsonArrayTemplate = toJsonArrayTemplate(toBuses.length);
-
-      int[] monType = flowgate.monType();
-      String monTypeJsonArrayTemplate = toJsonArrayTemplate(monType.length);
-
-      String statementTemplate = "INSERT INTO flowgates VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, " + frBusesJsonArrayTemplate + ", " + toBusesJsonArrayTemplate + ", " + monTypeJsonArrayTemplate + ")";
+//      String statementTemplate = "INSERT INTO flowgates VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, " + frBusesJsonArrayTemplate + ", " + toBusesJsonArrayTemplate + ", " + monTypeJsonArrayTemplate + ")";
+      String statementTemplate = "INSERT INTO flowgates VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
       try (PreparedStatement statement = connection.prepareStatement(statementTemplate)) {
         statement.setInt(1, flowgate.id());
@@ -167,17 +167,17 @@ public final class Importer {
         statement.setDouble(9, flowgate.loadingafter());
         statement.setDouble(10, flowgate.mwimpact());
 
-        for (int i = 0; i < frBuses.length; ++i) {
-          statement.setInt(10 + i + 1, frBuses[i]);
-        }
-
-        for (int i = 0; i < toBuses.length; ++i) {
-          statement.setInt(10 + frBuses.length + i + 1, toBuses[i]);
-        }
-
-        for (int i = 0; i < monType.length; ++i) {
-          statement.setInt(10 + frBuses.length + toBuses.length + i + 1, monType[i]);
-        }
+//        for (int i = 0; i < frBuses.length; ++i) {
+//          statement.setInt(10 + i + 1, frBuses[i]);
+//        }
+//
+//        for (int i = 0; i < toBuses.length; ++i) {
+//          statement.setInt(10 + frBuses.length + i + 1, toBuses[i]);
+//        }
+//
+//        for (int i = 0; i < monType.length; ++i) {
+//          statement.setInt(10 + frBuses.length + toBuses.length + i + 1, monType[i]);
+//        }
 
         statement.execute();
       } catch (SQLException e) {
@@ -191,29 +191,26 @@ public final class Importer {
       statement.execute(HARMERS_CREATE_TABLE);
     }
 
+    int harmerId = 0;
+
     try (PreparedStatement statement = connection.prepareStatement(HARMERS_INSERT_STATEMENT_TEMPLATE)) {
       for (Flowgate flowgate : flowgates) {
         List<Harmer> harmers = flowgate.harmers();
         for (Harmer harmer : harmers) {
-          statement.setString(1, harmer.id());
-          statement.setInt(2, harmer.index());
-          statement.setDouble(3, harmer.dfax());
-          statement.setDouble(4, harmer.mwchange());
-          statement.setDouble(5, harmer.mwimpact());
-          statement.setDouble(6, harmer.pmax());
-          statement.setDouble(7, harmer.pgen());
-          statement.setInt(8, flowgate.id());
+          statement.setInt(1, harmerId);
+          statement.setInt(2, flowgate.id());
+          statement.setInt(3, harmer.index());
+          statement.setDouble(4, harmer.dfax());
+          statement.setDouble(5, harmer.mwchange());
+          statement.setDouble(6, harmer.mwimpact());
+          statement.setDouble(7, harmer.pmax());
+          statement.setDouble(8, harmer.pgen());
           statement.addBatch();
+          ++harmerId;
         }
         statement.executeBatch();
       }
     }
-  }
-
-  private static String toJsonArrayTemplate(int length) {
-    return IntStream.range(0, length)
-            .mapToObj(value -> "?")
-            .collect(Collectors.joining(",", "json_array(", ")"));
   }
 
   private static double decryptLat(double encryptedLat, double encryptedLon) {
