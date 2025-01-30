@@ -1,20 +1,19 @@
 package com.powergem.wce.commands;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.powergem.wce.Importer;
 import com.powergem.wce.TransmissionLine;
 import com.powergem.worstcasetrlim.model.BranchTerminal;
 import com.powergem.worstcasetrlim.model.Bus;
+import com.powergem.worstcasetrlim.model.Flowgate;
 import picocli.CommandLine;
 
 import java.nio.file.Path;
 import java.sql.*;
 import java.util.*;
 import java.util.concurrent.Callable;
-import java.util.function.Function;
 
 import static com.powergem.wce.Utils.getConnection;
+import static com.powergem.wce.Utils.toFlowgate;
 
 @CommandLine.Command(name = "constraints")
 public class ListConstraintsCommand implements Callable<Integer> {
@@ -44,43 +43,53 @@ public class ListConstraintsCommand implements Callable<Integer> {
         }
       }
 
-      Function<Integer, BranchTerminal> getter = branchTerminalID -> {
-        try (PreparedStatement statement = connection.prepareStatement("select * from branchterminals where id = ?")) {
-          statement.setInt(1, branchTerminalID);
-          try (ResultSet rs = statement.executeQuery()) {
-            return rs.next() ? from(rs) : null;
-          }
-        } catch (SQLException e) {
-          throw new RuntimeException(e);
-        }
-      };
-
-      Map<Integer, BranchTerminal> terminalCache = new HashMap<>();
-      Set<TransmissionLine> transmissionLines = new LinkedHashSet<>();
-
-      try (PreparedStatement statement = connection.prepareStatement("select id, frBuses, toBuses, monType from flowgates where busid = ?")) {
+      // get all flowgates of the bus
+      List<Flowgate> flowgates = new ArrayList<>();
+      try (PreparedStatement statement = connection.prepareStatement("select * from flowgates where busid = ?")) {
         statement.setInt(1, busid);
-        try (ResultSet rs = statement.executeQuery()) {
-          while (rs.next()) {
-            int[] monTypes = toIntArray(rs.getString("monType"));
-            int[] frBuses = toIntArray(rs.getString("frBuses"));
-            int[] toBuses = toIntArray(rs.getString("toBuses"));
-            for (int i = 0; i < monTypes.length; i++) {
-              if (isTransmissionLine(monTypes[i])) {
-                BranchTerminal from = terminalCache.computeIfAbsent(frBuses[i], getter);
-                BranchTerminal to = terminalCache.computeIfAbsent(toBuses[i], getter);
-                transmissionLines.add(new TransmissionLine(from, to));
+        try (ResultSet resultSet = statement.executeQuery()) {
+          while (resultSet.next()) {
+            Flowgate flowgate = toFlowgate(resultSet);
+            flowgates.add(flowgate);
+          }
+        }
+      }
+
+      // get the branch constraints of each bus
+      Map<Integer, Thing> fromThings = HashMap.newHashMap(flowgates.size());
+      Map<Integer, Thing> toThings = HashMap.newHashMap(flowgates.size());
+      try (PreparedStatement statement = connection.prepareStatement("select * from branchterminals bt inner join (select rowid as rid, flowgateid, frbus, tobus from constraints where flowgateid = ? and montype = 1) c on bt.id in (c.frbus, c.tobus) order by rid;")) {
+        for (Flowgate flowgate : flowgates) {
+          statement.setInt(1, flowgate.id());
+          try (ResultSet resultSet = statement.executeQuery()) {
+            while (resultSet.next()) {
+              Thing thing = Thing.toThing(resultSet, flowgate);
+              if (thing.isFrom()) {
+                fromThings.put(thing.rid(), thing);
+              } else {
+                toThings.put(thing.rid(), thing);
               }
             }
           }
         }
       }
 
+//      List<TransmissionLine> transmissionLines = new ArrayList<>();
+      Map<Flowgate, TransmissionLine> transmissionLines = HashMap.newHashMap(flowgates.size());
+      for (Map.Entry<Integer, Thing> fromEntry : fromThings.entrySet()) {
+        Thing fromThing = fromEntry.getValue();
+        BranchTerminal fromBranchTerminal = toBranchTerminal(fromThing);
+        BranchTerminal toBranchTerminal = toBranchTerminal(toThings.get(fromThing.rid));
+        TransmissionLine transmissionLine = new TransmissionLine(fromBranchTerminal, toBranchTerminal);
+//        transmissionLines.add(transmissionLine);
+        transmissionLines.put(fromThing.flowgate, transmissionLine);
+      }
+
       System.out.println("Limiting constraints for bus ID: " + busid);
       System.out.println("  " + bus);
       System.out.println();
-      transmissionLines.forEach(transmissionLine -> {
-        System.out.println("  Branch terminals:");
+      transmissionLines.forEach((flowgate, transmissionLine) -> {
+        System.out.printf("  Branch terminals for %s%n", flowgate);
         System.out.println("    " + transmissionLine.from());
         System.out.println("    " + transmissionLine.to());
         System.out.println();
@@ -88,7 +97,11 @@ public class ListConstraintsCommand implements Callable<Integer> {
     }
 
     return 0;
-}
+  }
+
+  private BranchTerminal toBranchTerminal(Thing thing) {
+    return new BranchTerminal(thing.id, thing.name, thing.kv, thing.areanum, thing.areaname, thing.lat, thing.lon);
+  }
 
   private static Bus toBus(ResultSet resultSet) throws SQLException {
     return new Bus(
@@ -103,24 +116,27 @@ public class ListConstraintsCommand implements Callable<Integer> {
     );
   }
 
-  private static int[] toIntArray(String strJson) throws JsonProcessingException {
-  ObjectMapper objectMapper = new ObjectMapper();
-  return objectMapper.readValue(strJson, int[].class);
-}
+  private record Thing(Flowgate flowgate, int rid, int id, String name, double kv, int areanum, String areaname, int frbus, int tobus,
+                       double lat, double lon) {
 
-private static boolean isTransmissionLine(int monType) {
-  return monType == 1;
-}
+    public boolean isFrom() {
+      return id == frbus;
+    }
 
-private static BranchTerminal from(ResultSet rs) throws SQLException {
-  int id = rs.getInt("id");
-  String name = rs.getString("name");
-  double kv = rs.getDouble("kv");
-  int areaNum = rs.getInt("areaNum");
-  String areaName = rs.getString("areaName");
-  double lat = rs.getDouble("lat");
-  double lon = rs.getDouble("lon");
-
-  return new BranchTerminal(id, name, kv, areaNum, areaName, lat, lon);
-}
+    private static Thing toThing(ResultSet rs, Flowgate flowgate) throws SQLException {
+      return new Thing(
+              flowgate,
+              rs.getInt("rid"),
+              rs.getInt("id"),
+              rs.getString("name"),
+              rs.getDouble("kv"),
+              rs.getInt("areanum"),
+              rs.getString("areaname"),
+              rs.getInt("frbus"),
+              rs.getInt("tobus"),
+              rs.getDouble("lat"),
+              rs.getDouble("lon")
+      );
+    }
+  }
 }

@@ -23,6 +23,9 @@ public final class Importer {
   private static final String HARMERS_CREATE_TABLE = "CREATE TABLE harmers (id INTEGER, flowgateId INTEGER, stressGenId INTEGER, dfax REAL, mwchange REAL, mwimpact REAL, pmax REAL, pgen REAL)";
   private static final String HARMERS_INSERT_STATEMENT_TEMPLATE = "INSERT INTO harmers VALUES(?, ?, ?, ?, ?, ?, ?, ?)";
 
+  private static final String CONSTRAINTS_CREATE_TABLE = "CREATE TABLE constraints (flowgateid INTEGER, montype INTEGER, frbus INTEGER, tobus INTEGER)";
+  private static final String CONSTRAINTS_INSERT_STATEMENT_TEMPLATE = "INSERT INTO constraints VALUES(?, ?, ?, ?)";
+
   private Importer() {
   }
 
@@ -42,8 +45,33 @@ public final class Importer {
       createBranchTerminalsTable(wcResult.branchTerminalList(), connection);
       createFlowgatesTable(wcResult.flowgates(), connection);
       createHarmersTable(wcResult.flowgates(), connection);
+      createConstraintsTable(wcResult.flowgates(), connection);
     } catch (SQLException e) {
       throw new RuntimeException(e);
+    }
+  }
+
+  private static void createConstraintsTable(List<Flowgate> flowgates, Connection connection) throws SQLException {
+
+    try (Statement statement = connection.createStatement()) {
+      statement.execute(CONSTRAINTS_CREATE_TABLE);
+    }
+
+    try (PreparedStatement statement = connection.prepareStatement(CONSTRAINTS_INSERT_STATEMENT_TEMPLATE)) {
+      for (Flowgate flowgate : flowgates) {
+        int[] monTypes = flowgate.monType();
+        int[] frBus = flowgate.frBuses();
+        int[] toBus = flowgate.toBuses();
+
+        statement.setInt(1, flowgate.id());
+        for (int i = 0; i < monTypes.length; ++i) {
+          statement.setInt(2, monTypes[i]);
+          statement.setInt(3, frBus[i]);
+          statement.setInt(4, toBus[i]);
+          statement.addBatch();
+        }
+        statement.executeBatch();
+      }
     }
   }
 
