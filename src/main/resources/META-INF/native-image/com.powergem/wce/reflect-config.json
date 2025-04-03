@@ -12,6 +12,16 @@
   "queryAllDeclaredMethods":true
 },
 {
+  "name":"com.powergem.wce.commands.InfoCommand",
+  "allDeclaredFields":true,
+  "queryAllDeclaredMethods":true
+},
+{
+  "name":"com.powergem.wce.commands.ListBusesCommand",
+  "allDeclaredFields":true,
+  "queryAllDeclaredMethods":true
+},
+{
   "name":"com.powergem.wce.commands.ListCommand",
   "allDeclaredFields":true,
   "queryAllDeclaredMethods":true,
@@ -23,7 +33,27 @@
   "queryAllDeclaredMethods":true
 },
 {
+  "name":"com.powergem.wce.commands.ListFlowgatesCommand",
+  "allDeclaredFields":true,
+  "queryAllDeclaredMethods":true
+},
+{
+  "name":"com.powergem.wce.commands.ListHarmersCommand",
+  "allDeclaredFields":true,
+  "queryAllDeclaredMethods":true
+},
+{
   "name":"com.powergem.wce.commands.ListScenariosCommand",
+  "allDeclaredFields":true,
+  "queryAllDeclaredMethods":true
+},
+{
+  "name":"com.powergem.wce.commands.ListUnlocatedCommand",
+  "allDeclaredFields":true,
+  "queryAllDeclaredMethods":true
+},
+{
+  "name":"com.powergem.wce.commands.NormalizedCommand",
   "allDeclaredFields":true,
   "queryAllDeclaredMethods":true,
   "methods":[{"name":"<init>","parameterTypes":[] }]
@@ -36,37 +66,45 @@
 {
   "name":"com.powergem.worstcasetrlim.model.BranchTerminal",
   "allDeclaredFields":true,
+  "allRecordComponents":true,
   "queryAllDeclaredMethods":true,
   "queryAllDeclaredConstructors":true,
-  "methods":[{"name":"<init>","parameterTypes":["int","java.lang.String","double","int","java.lang.String","double","double"] }]
+  "methods":[{"name":"<init>","parameterTypes":["int","java.lang.String","double","int","java.lang.String","double","double"] }, {"name":"areaName","parameterTypes":[] }, {"name":"areaNum","parameterTypes":[] }, {"name":"id","parameterTypes":[] }, {"name":"kv","parameterTypes":[] }, {"name":"lat","parameterTypes":[] }, {"name":"lon","parameterTypes":[] }, {"name":"name","parameterTypes":[] }]
 },
 {
   "name":"com.powergem.worstcasetrlim.model.Bus",
   "allDeclaredFields":true,
+  "allRecordComponents":true,
   "queryAllDeclaredMethods":true,
   "queryAllDeclaredConstructors":true,
-  "methods":[{"name":"<init>","parameterTypes":["int","int","java.lang.String","double","java.lang.String","double","double","double"] }]
+  "methods":[{"name":"<init>","parameterTypes":["int","int","java.lang.String","double","java.lang.String","double","double","double"] }, {"name":"busarea","parameterTypes":[] }, {"name":"busname","parameterTypes":[] }, {"name":"busnum","parameterTypes":[] }, {"name":"busvolt","parameterTypes":[] }, {"name":"id","parameterTypes":[] }, {"name":"lat","parameterTypes":[] }, {"name":"lon","parameterTypes":[] }, {"name":"trlim","parameterTypes":[] }]
 },
 {
   "name":"com.powergem.worstcasetrlim.model.Flowgate",
   "allDeclaredFields":true,
+  "allRecordComponents":true,
   "queryAllDeclaredMethods":true,
   "queryAllDeclaredConstructors":true,
-  "methods":[{"name":"<init>","parameterTypes":["int","int","double","double","java.lang.String","java.lang.String","double","double","double","double","java.util.List","int[]","int[]","int[]"] }]
+  "methods":[{"name":"<init>","parameterTypes":["int","int","double","double","java.lang.String","java.lang.String","double","double","double","double","java.util.List","int[]","int[]","int[]"] }, {"name":"busid","parameterTypes":[] }, {"name":"con","parameterTypes":[] }, {"name":"dfax","parameterTypes":[] }, {"name":"frBuses","parameterTypes":[] }, {"name":"harmers","parameterTypes":[] }, {"name":"id","parameterTypes":[] }, {"name":"loadingafter","parameterTypes":[] }, {"name":"loadingbefore","parameterTypes":[] }, {"name":"mon","parameterTypes":[] }, {"name":"monType","parameterTypes":[] }, {"name":"mwimpact","parameterTypes":[] }, {"name":"rating","parameterTypes":[] }, {"name":"toBuses","parameterTypes":[] }, {"name":"trlim","parameterTypes":[] }]
 },
 {
   "name":"com.powergem.worstcasetrlim.model.Harmer",
   "allDeclaredFields":true,
   "queryAllDeclaredMethods":true,
   "queryAllDeclaredConstructors":true,
-  "methods":[{"name":"<init>","parameterTypes":["java.lang.String","int","double","double","double","double","double"] }]
+  "methods":[{"name":"<init>","parameterTypes":["java.lang.String","int","double","double","double","double","double"] }, {"name":"dfax","parameterTypes":[] }, {"name":"id","parameterTypes":[] }, {"name":"index","parameterTypes":[] }, {"name":"mwchange","parameterTypes":[] }, {"name":"mwimpact","parameterTypes":[] }, {"name":"pgen","parameterTypes":[] }, {"name":"pmax","parameterTypes":[] }]
+},
+{
+  "name":"com.powergem.worstcasetrlim.model.ILocation",
+  "queryAllDeclaredMethods":true
 },
 {
   "name":"com.powergem.worstcasetrlim.model.StressGen",
   "allDeclaredFields":true,
+  "allRecordComponents":true,
   "queryAllDeclaredMethods":true,
   "queryAllDeclaredConstructors":true,
-  "methods":[{"name":"<init>","parameterTypes":["int","int","java.lang.String","double","java.lang.String","double","double"] }]
+  "methods":[{"name":"<init>","parameterTypes":["int","int","java.lang.String","double","java.lang.String","double","double"] }, {"name":"busarea","parameterTypes":[] }, {"name":"busname","parameterTypes":[] }, {"name":"busnum","parameterTypes":[] }, {"name":"busvolt","parameterTypes":[] }, {"name":"id","parameterTypes":[] }, {"name":"lat","parameterTypes":[] }, {"name":"lon","parameterTypes":[] }]
 },
 {
   "name":"com.powergem.worstcasetrlim.model.WcResult",
@@ -83,11 +121,52 @@
   "methods":[{"name":"<init>","parameterTypes":["java.util.List"] }]
 },
 {
+  "name":"com.powergem.worstcasetrlim.normalized.model.Normalized",
+  "allDeclaredFields":true,
+  "queryAllDeclaredMethods":true,
+  "methods":[{"name":"scenarios","parameterTypes":[] }]
+},
+{
+  "name":"com.powergem.worstcasetrlim.normalized.model.Scenario",
+  "allDeclaredFields":true,
+  "queryAllDeclaredMethods":true,
+  "methods":[{"name":"branchTerminals","parameterTypes":[] }, {"name":"buses","parameterTypes":[] }, {"name":"flowgates","parameterTypes":[] }, {"name":"id","parameterTypes":[] }, {"name":"stressGens","parameterTypes":[] }, {"name":"title","parameterTypes":[] }, {"name":"version","parameterTypes":[] }]
+},
+{
+  "name":"com.powergem.worstcasetrlim.normalized.model.Table",
+  "allDeclaredFields":true,
+  "queryAllDeclaredMethods":true,
+  "methods":[{"name":"schema","parameterTypes":[] }, {"name":"table","parameterTypes":[] }]
+},
+{
+  "name":"double",
+  "queryAllDeclaredMethods":true
+},
+{
   "name":"groovy.lang.Closure"
+},
+{
+  "name":"java.io.Serializable",
+  "queryAllDeclaredMethods":true
 },
 {
   "name":"java.lang.Class",
   "methods":[{"name":"getRecordComponents","parameterTypes":[] }]
+},
+{
+  "name":"java.lang.Comparable",
+  "queryAllDeclaredMethods":true
+},
+{
+  "name":"java.lang.Double",
+  "allDeclaredFields":true,
+  "queryAllDeclaredMethods":true,
+  "queryAllDeclaredConstructors":true
+},
+{
+  "name":"java.lang.Number",
+  "allDeclaredFields":true,
+  "queryAllDeclaredMethods":true
 },
 {
   "name":"java.lang.Object",
@@ -97,6 +176,14 @@
 {
   "name":"java.lang.Record",
   "allDeclaredFields":true,
+  "queryAllDeclaredMethods":true
+},
+{
+  "name":"java.lang.constant.Constable",
+  "queryAllDeclaredMethods":true
+},
+{
+  "name":"java.lang.constant.ConstantDesc",
   "queryAllDeclaredMethods":true
 },
 {
