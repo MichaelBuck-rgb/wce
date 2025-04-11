@@ -9,22 +9,23 @@ import java.util.Collection;
 import java.util.List;
 
 public final class Importer {
-  private static final String BUSES_CREATE_TABLE = "CREATE TABLE buses (id INTEGER, busnum INTEGER, busname TEXT, busvolt REAL, busarea TEXT, trlim REAL, lat REAL, lon REAL)";
-  private static final String BUSES_INSERT_STATEMENT_TEMPLATE = "INSERT INTO buses VALUES(?, ?, ?, ?, ?, ?, ?, ?)";
+  private static final String BUSES_CREATE_TABLE = "CREATE TABLE buses (scenarioId INTEGER, id INTEGER, busnum INTEGER, busname TEXT, busvolt REAL, busarea TEXT, trlim REAL, lat REAL, lon REAL)";
+  private static final String BUSES_INSERT_STATEMENT_TEMPLATE = "INSERT INTO buses VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
-  private static final String STRESSGENS_CREATE_TABLE = "CREATE TABLE stressgens (id INTEGER, busnum INTEGER, busname TEXT, busvolt REAL, busarea TEXT, lat REAL, lon REAL)";
-  private static final String STRESSGENS_INSERT_STATEMENT_TEMPLATE = "INSERT INTO stressgens VALUES(?, ?, ?, ?, ?, ?, ?)";
+  private static final String STRESSGENS_CREATE_TABLE = "CREATE TABLE stressgens (scenarioId INTEGER, id INTEGER, busnum INTEGER, busname TEXT, busvolt REAL, busarea TEXT, lat REAL, lon REAL)";
+  private static final String STRESSGENS_INSERT_STATEMENT_TEMPLATE = "INSERT INTO stressgens VALUES(?, ?, ?, ?, ?, ?, ?, ?)";
 
-  private static final String BRANCHTERMINAL_CREATE_TABLE = "CREATE TABLE branchterminals (id INTEGER, name TEXT, kv REAL, areanum INTEGER, areaname TEXT, lat REAL, lon REAL)";
-  private static final String BRANCHTERMINAL_INSERT_STATEMENT_TEMPLATE = "INSERT INTO branchterminals VALUES(?, ?, ?, ?, ?, ?, ?)";
+  private static final String BRANCHTERMINALS_CREATE_TABLE = "CREATE TABLE branchterminals (scenarioId INTEGER, id INTEGER, name TEXT, kv REAL, areanum INTEGER, areaname TEXT, lat REAL, lon REAL)";
+  private static final String BRANCHTERMINALS_INSERT_STATEMENT_TEMPLATE = "INSERT INTO branchterminals VALUES(?, ?, ?, ?, ?, ?, ?, ?)";
 
-  private static final String FLOWGATE_CREATE_TABLE = "CREATE TABLE flowgates (id INTEGER, busid INTEGER, dfax REAL, trlim REAL, mon TEXT, con TEXT, rating REAL, loadingbefore REAL, loadingafter REAL, mwimpact REAL)";
+  private static final String FLOWGATES_CREATE_TABLE = "CREATE TABLE flowgates (scenarioId INTEGER, id INTEGER, busid INTEGER, dfax REAL, trlim REAL, mon TEXT, con TEXT, rating REAL, loadingbefore REAL, loadingafter REAL, mwimpact REAL)";
+  private static final String FLOWGATES_INSERT_STATEMENT_TEMPLATE = "INSERT INTO flowgates VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
-  private static final String HARMERS_CREATE_TABLE = "CREATE TABLE harmers (id INTEGER, flowgateId INTEGER, stressGenId INTEGER, dfax REAL, mwchange REAL, mwimpact REAL, pmax REAL, pgen REAL)";
-  private static final String HARMERS_INSERT_STATEMENT_TEMPLATE = "INSERT INTO harmers VALUES(?, ?, ?, ?, ?, ?, ?, ?)";
+  private static final String HARMERS_CREATE_TABLE = "CREATE TABLE harmers (scenarioId INTEGER, id INTEGER, flowgateId INTEGER, stressGenId INTEGER, dfax REAL, mwchange REAL, mwimpact REAL, pmax REAL, pgen REAL)";
+  private static final String HARMERS_INSERT_STATEMENT_TEMPLATE = "INSERT INTO harmers VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
-  private static final String CONSTRAINTS_CREATE_TABLE = "CREATE TABLE constraints (flowgateid INTEGER, montype INTEGER, frbus INTEGER, tobus INTEGER)";
-  private static final String CONSTRAINTS_INSERT_STATEMENT_TEMPLATE = "INSERT INTO constraints VALUES(?, ?, ?, ?)";
+  private static final String CONSTRAINTS_CREATE_TABLE = "CREATE TABLE constraints (scenarioId INTEGER, flowgateid INTEGER, montype INTEGER, frbus INTEGER, tobus INTEGER)";
+  private static final String CONSTRAINTS_INSERT_STATEMENT_TEMPLATE = "INSERT INTO constraints VALUES(?, ?, ?, ?, ?)";
 
   private Importer() {
   }
@@ -38,36 +39,83 @@ public final class Importer {
       try (Statement statement = connection.createStatement()) {
         statement.execute("PRAGMA synchronous = OFF");
         statement.execute("PRAGMA journal_mode = MEMORY");
+        statement.execute("PRAGMA page_size = 1024");
       }
-      WcResult wcResult = worstCaseTrLim.wcResults().getFirst();
-      createBusTable(wcResult.buses(), connection);
-      createStressGensTable(wcResult.StressGens(), connection);
-      createBranchTerminalsTable(wcResult.branchTerminalList(), connection);
-      createFlowgatesTable(wcResult.flowgates(), connection);
-      createHarmersTable(wcResult.flowgates(), connection);
-      createConstraintsTable(wcResult.flowgates(), connection);
+
+      createScenariosTable(worstCaseTrLim.wcResults(), connection);
+
+      try (Statement statement = connection.createStatement()) {
+        statement.execute(BUSES_CREATE_TABLE);
+        statement.execute(STRESSGENS_CREATE_TABLE);
+        statement.execute(BRANCHTERMINALS_CREATE_TABLE);
+        statement.execute(FLOWGATES_CREATE_TABLE);
+        statement.execute(HARMERS_CREATE_TABLE);
+        statement.execute(CONSTRAINTS_CREATE_TABLE);
+      }
+
+      for (WcResult wcResult : worstCaseTrLim.wcResults()) {
+        int id = Integer.parseInt(wcResult.id());
+        createBusTable(wcResult.buses(), id, connection);
+        createStressGensTable(wcResult.StressGens(), id, connection);
+        createBranchTerminalsTable(wcResult.branchTerminalList(), id, connection);
+        createFlowgatesTable(wcResult.flowgates(), id, connection);
+        createHarmersTable(wcResult.flowgates(), id, connection);
+        createConstraintsTable(wcResult.flowgates(), id, connection);
+      }
+
+      // todo: create indices
+      try (Statement statement = connection.createStatement()) {
+        statement.execute("CREATE INDEX bus_index ON buses (scenarioId, id)");
+        statement.execute("CREATE INDEX stressgens_index ON stressgens (scenarioId, id)");
+        statement.execute("CREATE INDEX branchterminals_index ON branchterminals (scenarioId, id)");
+        statement.execute("CREATE INDEX flowgates_index ON flowgates (scenarioId, id)");
+        statement.execute("CREATE INDEX harmers_index ON harmers (scenarioId, id, flowgateId)");
+        statement.execute("CREATE INDEX constraints_index ON harmers (scenarioId, flowgateId)");
+      }
+
     } catch (SQLException e) {
       throw new RuntimeException(e);
     }
   }
 
-  private static void createConstraintsTable(List<Flowgate> flowgates, Connection connection) throws SQLException {
-
+  private static void createScenariosTable(List<WcResult> wcResults, Connection connection) throws SQLException {
     try (Statement statement = connection.createStatement()) {
-      statement.execute(CONSTRAINTS_CREATE_TABLE);
+      statement.execute("CREATE TABLE scenarios (id TEXT, version TEXT, name TEXT, mode TEXT)");
     }
 
+    try (PreparedStatement statement = connection.prepareStatement("INSERT INTO scenarios VALUES(?, ?, ?, ?)")) {
+      for (WcResult wcResult : wcResults) {
+        statement.setString(1, wcResult.id());
+
+        String version = wcResult.version();
+        if (version == null || version.isEmpty()) {
+          version = "1.0";
+        }
+
+        statement.setString(2, version);
+        statement.setString(3, wcResult.title());
+        // todo: determine mode if not found or empty
+        statement.setString(4, "injection");
+        statement.addBatch();
+      }
+      statement.executeBatch();
+    }
+  }
+
+  private static void createConstraintsTable(List<Flowgate> flowgates, int scenarioId, Connection connection) throws SQLException {
     try (PreparedStatement statement = connection.prepareStatement(CONSTRAINTS_INSERT_STATEMENT_TEMPLATE)) {
       for (Flowgate flowgate : flowgates) {
         int[] monTypes = flowgate.monType();
         int[] frBus = flowgate.frBuses();
         int[] toBus = flowgate.toBuses();
 
-        statement.setInt(1, flowgate.id());
+        int index = 1;
+
+        statement.setInt(index++, flowgate.id());
         for (int i = 0; i < monTypes.length; ++i) {
-          statement.setInt(2, monTypes[i]);
-          statement.setInt(3, frBus[i]);
-          statement.setInt(4, toBus[i]);
+          statement.setInt(index++, monTypes[i]);
+          statement.setInt(index++, frBus[i]);
+          statement.setInt(index++, toBus[i]);
           statement.addBatch();
         }
         statement.executeBatch();
@@ -104,135 +152,98 @@ public final class Importer {
     return buses.stream().map(bus -> new Bus(bus.id(), bus.busnum(), bus.busname(), bus.busvolt(), bus.busarea(), bus.trlim(), decryptLat(bus.lat(), bus.lon()), decryptLon(bus.lat(), bus.lon()))).toList();
   }
 
-  private static void createBusTable(Collection<Bus> buses, Connection connection) throws SQLException {
-    try (Statement statement = connection.createStatement()) {
-      statement.execute(BUSES_CREATE_TABLE);
-    }
-
+  private static void createBusTable(Collection<Bus> buses, int scenarioId, Connection connection) throws SQLException {
     try (PreparedStatement statement = connection.prepareStatement(BUSES_INSERT_STATEMENT_TEMPLATE)) {
       for (Bus bus : buses) {
-        statement.setInt(1, bus.id());
-        statement.setInt(2, bus.busnum());
-        statement.setString(3, bus.busname());
-        statement.setDouble(4, bus.busvolt());
-        statement.setString(5, bus.busarea());
-        statement.setDouble(6, bus.trlim());
-        statement.setDouble(7, bus.lat());
-        statement.setDouble(8, bus.lon());
+        int index = 1;
+        statement.setInt(index++, scenarioId);
+        statement.setInt(index++, bus.id());
+        statement.setInt(index++, bus.busnum());
+        statement.setString(index++, bus.busname());
+        statement.setDouble(index++, bus.busvolt());
+        statement.setString(index++, bus.busarea());
+        statement.setDouble(index++, bus.trlim());
+        statement.setDouble(index++, bus.lat());
+        statement.setDouble(index, bus.lon());
         statement.addBatch();
       }
       statement.executeBatch();
     }
   }
 
-  private static void createStressGensTable(Collection<StressGen> stressGens, Connection connection) throws SQLException {
-    try (Statement statement = connection.createStatement()) {
-      statement.execute(STRESSGENS_CREATE_TABLE);
-    }
-
+  private static void createStressGensTable(Collection<StressGen> stressGens, int scenarioId, Connection connection) throws SQLException {
     try (PreparedStatement statement = connection.prepareStatement(STRESSGENS_INSERT_STATEMENT_TEMPLATE)) {
       for (StressGen stressGen : stressGens) {
-        statement.setInt(1, stressGen.id());
-        statement.setInt(2, stressGen.busnum());
-        statement.setString(3, stressGen.busname());
-        statement.setDouble(4, stressGen.busvolt());
-        statement.setString(5, stressGen.busarea());
-        statement.setDouble(6, stressGen.lat());
-        statement.setDouble(7, stressGen.lon());
+        int index = 1;
+        statement.setInt(index++, scenarioId);
+        statement.setInt(index++, stressGen.id());
+        statement.setInt(index++, stressGen.busnum());
+        statement.setString(index++, stressGen.busname());
+        statement.setDouble(index++, stressGen.busvolt());
+        statement.setString(index++, stressGen.busarea());
+        statement.setDouble(index++, stressGen.lat());
+        statement.setDouble(index, stressGen.lon());
         statement.addBatch();
       }
       statement.executeBatch();
     }
   }
 
-  private static void createBranchTerminalsTable(Collection<BranchTerminal> branchTerminals, Connection connection) throws SQLException {
-    try (Statement statement = connection.createStatement()) {
-      statement.execute(BRANCHTERMINAL_CREATE_TABLE);
-    }
-
-    try (PreparedStatement statement = connection.prepareStatement(BRANCHTERMINAL_INSERT_STATEMENT_TEMPLATE)) {
+  private static void createBranchTerminalsTable(Collection<BranchTerminal> branchTerminals, int scenarioId, Connection connection) throws SQLException {
+    try (PreparedStatement statement = connection.prepareStatement(BRANCHTERMINALS_INSERT_STATEMENT_TEMPLATE)) {
       for (BranchTerminal branchTerminal : branchTerminals) {
-        statement.setInt(1, branchTerminal.id());
-        statement.setString(2, branchTerminal.name());
-        statement.setDouble(3, branchTerminal.kv());
-        statement.setInt(4, branchTerminal.areaNum());
-        statement.setString(5, branchTerminal.areaName());
-        statement.setDouble(6, branchTerminal.lat());
-        statement.setDouble(7, branchTerminal.lon());
+        int index = 1;
+        statement.setInt(index++, scenarioId);
+        statement.setInt(index++, branchTerminal.id());
+        statement.setString(index++, branchTerminal.name());
+        statement.setDouble(index++, branchTerminal.kv());
+        statement.setInt(index++, branchTerminal.areaNum());
+        statement.setString(index++, branchTerminal.areaName());
+        statement.setDouble(index++, branchTerminal.lat());
+        statement.setDouble(index, branchTerminal.lon());
         statement.addBatch();
       }
       statement.executeBatch();
     }
   }
 
-  private static void createFlowgatesTable(Collection<Flowgate> flowgates, Connection connection) throws SQLException {
-    try (Statement statement = connection.createStatement()) {
-      statement.execute(FLOWGATE_CREATE_TABLE);
-    }
-
-    for (Flowgate flowgate : flowgates) {
-//      int[] frBuses = flowgate.frBuses();
-//      String frBusesJsonArrayTemplate = toJsonArrayTemplate(frBuses.length);
-//
-//      int[] toBuses = flowgate.toBuses();
-//      String toBusesJsonArrayTemplate = toJsonArrayTemplate(toBuses.length);
-//
-//      int[] monType = flowgate.monType();
-//      String monTypeJsonArrayTemplate = toJsonArrayTemplate(monType.length);
-
-//      String statementTemplate = "INSERT INTO flowgates VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, " + frBusesJsonArrayTemplate + ", " + toBusesJsonArrayTemplate + ", " + monTypeJsonArrayTemplate + ")";
-      String statementTemplate = "INSERT INTO flowgates VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-
-      try (PreparedStatement statement = connection.prepareStatement(statementTemplate)) {
-        statement.setInt(1, flowgate.id());
-        statement.setInt(2, flowgate.busid());
-        statement.setDouble(3, flowgate.dfax());
-        statement.setDouble(4, flowgate.trlim());
-        statement.setString(5, flowgate.mon());
-        statement.setString(6, flowgate.con());
-        statement.setDouble(7, flowgate.rating());
-        statement.setDouble(8, flowgate.loadingbefore());
-        statement.setDouble(9, flowgate.loadingafter());
-        statement.setDouble(10, flowgate.mwimpact());
-
-//        for (int i = 0; i < frBuses.length; ++i) {
-//          statement.setInt(10 + i + 1, frBuses[i]);
-//        }
-//
-//        for (int i = 0; i < toBuses.length; ++i) {
-//          statement.setInt(10 + frBuses.length + i + 1, toBuses[i]);
-//        }
-//
-//        for (int i = 0; i < monType.length; ++i) {
-//          statement.setInt(10 + frBuses.length + toBuses.length + i + 1, monType[i]);
-//        }
-
-        statement.execute();
-      } catch (SQLException e) {
-        throw new RuntimeException("Exception while writing flowgate with id " + flowgate.id(), e);
+  private static void createFlowgatesTable(Collection<Flowgate> flowgates, int scenarioId, Connection connection) throws SQLException {
+    try (PreparedStatement statement = connection.prepareStatement(FLOWGATES_INSERT_STATEMENT_TEMPLATE)) {
+      for (Flowgate flowgate : flowgates) {
+        int index = 1;
+        statement.setInt(index++, scenarioId);
+        statement.setInt(index++, flowgate.id());
+        statement.setInt(index++, flowgate.busid());
+        statement.setDouble(index++, flowgate.dfax());
+        statement.setDouble(index++, flowgate.trlim());
+        statement.setString(index++, flowgate.mon());
+        statement.setString(index++, flowgate.con());
+        statement.setDouble(index++, flowgate.rating());
+        statement.setDouble(index++, flowgate.loadingbefore());
+        statement.setDouble(index++, flowgate.loadingafter());
+        statement.setDouble(index, flowgate.mwimpact());
+        statement.addBatch();
       }
+      statement.executeBatch();
     }
   }
 
-  private static void createHarmersTable(List<Flowgate> flowgates, Connection connection) throws SQLException {
-    try (Statement statement = connection.createStatement()) {
-      statement.execute(HARMERS_CREATE_TABLE);
-    }
-
+  private static void createHarmersTable(List<Flowgate> flowgates, int scenarioId, Connection connection) throws SQLException {
     int harmerId = 0;
-
     try (PreparedStatement statement = connection.prepareStatement(HARMERS_INSERT_STATEMENT_TEMPLATE)) {
       for (Flowgate flowgate : flowgates) {
         List<Harmer> harmers = flowgate.harmers();
         for (Harmer harmer : harmers) {
-          statement.setInt(1, harmerId);
-          statement.setInt(2, flowgate.id());
-          statement.setInt(3, harmer.index());
-          statement.setDouble(4, harmer.dfax());
-          statement.setDouble(5, harmer.mwchange());
-          statement.setDouble(6, harmer.mwimpact());
-          statement.setDouble(7, harmer.pmax());
-          statement.setDouble(8, harmer.pgen());
+          int index = 1;
+          statement.setInt(index++, scenarioId);
+          statement.setInt(index++, harmerId);
+          statement.setInt(index++, flowgate.id());
+          statement.setInt(index++, harmer.index());
+          statement.setDouble(index++, harmer.dfax());
+          statement.setDouble(index++, harmer.mwchange());
+          statement.setDouble(index++, harmer.mwimpact());
+          statement.setDouble(index++, harmer.pmax());
+          statement.setDouble(index, harmer.pgen());
           statement.addBatch();
           ++harmerId;
         }
