@@ -74,14 +74,12 @@ public class ListConstraintsCommand implements Callable<Integer> {
         }
       }
 
-//      List<TransmissionLine> transmissionLines = new ArrayList<>();
       Map<Flowgate, TransmissionLine> transmissionLines = HashMap.newHashMap(flowgates.size());
       for (Map.Entry<Integer, Thing> fromEntry : fromThings.entrySet()) {
         Thing fromThing = fromEntry.getValue();
         BranchTerminal fromBranchTerminal = toBranchTerminal(fromThing);
         BranchTerminal toBranchTerminal = toBranchTerminal(toThings.get(fromThing.rid));
         TransmissionLine transmissionLine = new TransmissionLine(fromBranchTerminal, toBranchTerminal);
-//        transmissionLines.add(transmissionLine);
         transmissionLines.put(fromThing.flowgate, transmissionLine);
       }
 

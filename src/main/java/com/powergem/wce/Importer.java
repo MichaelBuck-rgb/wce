@@ -63,14 +63,14 @@ public final class Importer {
         createConstraintsTable(wcResult.flowgates(), id, connection);
       }
 
-      // todo: create indices
+      // create indices
       try (Statement statement = connection.createStatement()) {
         statement.execute("CREATE INDEX bus_index ON buses (scenarioId, id)");
         statement.execute("CREATE INDEX stressgens_index ON stressgens (scenarioId, id)");
         statement.execute("CREATE INDEX branchterminals_index ON branchterminals (scenarioId, id)");
-        statement.execute("CREATE INDEX flowgates_index ON flowgates (scenarioId, id)");
+        statement.execute("CREATE INDEX flowgates_index ON flowgates (scenarioId, id, busid)");
         statement.execute("CREATE INDEX harmers_index ON harmers (scenarioId, id, flowgateId)");
-        statement.execute("CREATE INDEX constraints_index ON harmers (scenarioId, flowgateId)");
+        statement.execute("CREATE INDEX constraints_index ON constraints (scenarioId, flowgateId)");
       }
 
     } catch (SQLException e) {
@@ -111,8 +111,9 @@ public final class Importer {
 
         int index = 1;
 
-        statement.setInt(index++, flowgate.id());
         for (int i = 0; i < monTypes.length; ++i) {
+          statement.setInt(index++, scenarioId);
+          statement.setInt(index++, flowgate.id());
           statement.setInt(index++, monTypes[i]);
           statement.setInt(index++, frBus[i]);
           statement.setInt(index++, toBus[i]);
