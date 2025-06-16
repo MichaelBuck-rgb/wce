@@ -1,6 +1,6 @@
 plugins {
     id("org.beryx.jlink") version "3.1.1"
-    id("org.graalvm.buildtools.native") version "0.10.4"
+    id("org.graalvm.buildtools.native") version "0.10.6"
 }
 
 group = "com.powergem"
@@ -55,6 +55,7 @@ graalvmNative {
             imageName.set("wce")
             quickBuild.set(true)
             buildArgs.add("-R:MaxHeapSize=256M")
+            buildArgs.add("--enable-native-access=ALL-UNNAMED")
         }
         binaries.all {
             resources.autodetect()
