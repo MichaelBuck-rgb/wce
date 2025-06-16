@@ -47,6 +47,6 @@ public final class Utils {
     int[] toBuses = new int[0];
     int[] monType = new int[0];
 
-    return new Flowgate(id, busid, dfax, trlim, mon, con, rating, loadingbefore, loadingafter, mwimpact, harmers, frBuses, toBuses, monType);
+    return new Flowgate(id, busid, dfax, trlim, mon, con, rating, loadingbefore, loadingafter, mwimpact, harmers, frBuses, toBuses, monType, new int[0]);
   }
 }

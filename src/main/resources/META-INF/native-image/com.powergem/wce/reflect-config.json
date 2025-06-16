@@ -85,7 +85,7 @@
   "allRecordComponents":true,
   "queryAllDeclaredMethods":true,
   "queryAllDeclaredConstructors":true,
-  "methods":[{"name":"<init>","parameterTypes":["int","int","double","double","java.lang.String","java.lang.String","double","double","double","double","java.util.List","int[]","int[]","int[]"] }, {"name":"busid","parameterTypes":[] }, {"name":"con","parameterTypes":[] }, {"name":"dfax","parameterTypes":[] }, {"name":"frBuses","parameterTypes":[] }, {"name":"harmers","parameterTypes":[] }, {"name":"id","parameterTypes":[] }, {"name":"loadingafter","parameterTypes":[] }, {"name":"loadingbefore","parameterTypes":[] }, {"name":"mon","parameterTypes":[] }, {"name":"monType","parameterTypes":[] }, {"name":"mwimpact","parameterTypes":[] }, {"name":"rating","parameterTypes":[] }, {"name":"toBuses","parameterTypes":[] }, {"name":"trlim","parameterTypes":[] }]
+  "methods":[{"name":"<init>","parameterTypes":["int","int","double","double","java.lang.String","java.lang.String","double","double","double","double","java.util.List","int[]","int[]","int[]","int[]"] }, {"name":"busid","parameterTypes":[] }, {"name":"con","parameterTypes":[] }, {"name":"dfax","parameterTypes":[] }, {"name":"frBuses","parameterTypes":[] }, {"name":"harmers","parameterTypes":[] }, {"name":"id","parameterTypes":[] }, {"name":"loadingafter","parameterTypes":[] }, {"name":"loadingbefore","parameterTypes":[] }, {"name":"mon","parameterTypes":[] }, {"name":"monType","parameterTypes":[] }, {"name":"mwimpact","parameterTypes":[] }, {"name":"rating","parameterTypes":[] }, {"name":"toBuses","parameterTypes":[] }, {"name":"trlim","parameterTypes":[] }, {"name":"equipmentIndex","parameterTypes":[] }]
 },
 {
   "name":"com.powergem.worstcasetrlim.model.Harmer",

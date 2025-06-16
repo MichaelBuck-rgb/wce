@@ -93,7 +93,8 @@ public final class ListHarmersCommand implements Callable<Integer> {
             resultSet.getDouble("mwchange"),
             resultSet.getDouble("mwimpact"),
             resultSet.getDouble("pmax"),
-            resultSet.getDouble("pgen")
+            resultSet.getDouble("pgen"),
+            resultSet.getInt("scenarioId")
     );
   }
 }

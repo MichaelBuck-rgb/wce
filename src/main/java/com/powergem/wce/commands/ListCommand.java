@@ -11,6 +11,7 @@ import java.util.concurrent.Callable;
                 ListScenariosCommand.class,
                 ListUnlocatedCommand.class,
                 ListBusesCommand.class,
+                ListChildrenCommand.class,
                 ListFlowgatesCommand.class,
                 ListHarmersCommand.class,
         },

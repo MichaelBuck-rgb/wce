@@ -37,7 +37,7 @@ public final class Utilities {
     int id = 1;
     List<WcResult> wcResults = worstCaseTrLim.wcResults();
     for (WcResult wcResult : wcResults) {
-      wcResult = new WcResult(wcResult.version(), String.valueOf(id), wcResult.title(), wcResult.buses(), wcResult.StressGens(), wcResult.flowgates(), wcResult.branchTerminalList());
+      wcResult = new WcResult(wcResult.version(), String.valueOf(id), wcResult.title(), wcResult.buses(), wcResult.StressGens(), wcResult.flowgates(), wcResult.branchTerminalList(), wcResult.type(), wcResult.lineCostData(), wcResult.transformerCostData());
       worstCaseTrLim.wcResults().set(id - 1, wcResult);
       ++id;
     }

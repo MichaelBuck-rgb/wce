@@ -18,8 +18,8 @@ public final class Importer {
   private static final String BRANCHTERMINALS_CREATE_TABLE = "CREATE TABLE branchterminals (scenarioId INTEGER, id INTEGER, name TEXT, kv REAL, areanum INTEGER, areaname TEXT, lat REAL, lon REAL)";
   private static final String BRANCHTERMINALS_INSERT_STATEMENT_TEMPLATE = "INSERT INTO branchterminals VALUES(?, ?, ?, ?, ?, ?, ?, ?)";
 
-  private static final String FLOWGATES_CREATE_TABLE = "CREATE TABLE flowgates (scenarioId INTEGER, id INTEGER, busid INTEGER, dfax REAL, trlim REAL, mon TEXT, con TEXT, rating REAL, loadingbefore REAL, loadingafter REAL, mwimpact REAL)";
-  private static final String FLOWGATES_INSERT_STATEMENT_TEMPLATE = "INSERT INTO flowgates VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+  private static final String FLOWGATES_CREATE_TABLE = "CREATE TABLE flowgates (scenarioId INTEGER, id INTEGER, busid INTEGER, dfax REAL, trlim REAL, mon TEXT, con TEXT, rating REAL, loadingbefore REAL)";
+  private static final String FLOWGATES_INSERT_STATEMENT_TEMPLATE = "INSERT INTO flowgates VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
   private static final String HARMERS_CREATE_TABLE = "CREATE TABLE harmers (scenarioId INTEGER, id INTEGER, flowgateId INTEGER, stressGenId INTEGER, dfax REAL, mwchange REAL, mwimpact REAL, pmax REAL, pgen REAL)";
   private static final String HARMERS_INSERT_STATEMENT_TEMPLATE = "INSERT INTO harmers VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)";
@@ -109,14 +109,12 @@ public final class Importer {
         int[] frBus = flowgate.frBuses();
         int[] toBus = flowgate.toBuses();
 
-        int index = 1;
-
         for (int i = 0; i < monTypes.length; ++i) {
-          statement.setInt(index++, scenarioId);
-          statement.setInt(index++, flowgate.id());
-          statement.setInt(index++, monTypes[i]);
-          statement.setInt(index++, frBus[i]);
-          statement.setInt(index++, toBus[i]);
+          statement.setInt(1, scenarioId);
+          statement.setInt(2, flowgate.id());
+          statement.setInt(3, monTypes[i]);
+          statement.setInt(4, frBus[i]);
+          statement.setInt(5, toBus[i]);
           statement.addBatch();
         }
         statement.executeBatch();
@@ -137,12 +135,15 @@ public final class Importer {
             decryptBuses(wcResult.buses()),
             decryptStressGens(wcResult.StressGens()),
             wcResult.flowgates(),
-            decryptBranchTerminals(wcResult.branchTerminalList())
+            decryptBranchTerminals(wcResult.branchTerminalList()),
+            wcResult.type(),
+            wcResult.lineCostData(),
+            wcResult.transformerCostData()
     );
   }
 
   private static List<BranchTerminal> decryptBranchTerminals(List<BranchTerminal> branchTerminals) {
-    return branchTerminals.stream().map(bt -> new BranchTerminal(bt.id(), bt.name(), bt.kv(), bt.areaNum(), bt.areaName(), decryptLat(bt.lat(), bt.lon()), decryptLon(bt.lat(), bt.lon()))).toList();
+    return branchTerminals.stream().map(bt -> new BranchTerminal(bt.id(), bt.name(), bt.kv(), bt.areaNum(), bt.areaname(), decryptLat(bt.lat(), bt.lon()), decryptLon(bt.lat(), bt.lon()), bt.areaNum())).toList();
   }
 
   private static List<StressGen> decryptStressGens(List<StressGen> stressGens) {
@@ -199,7 +200,7 @@ public final class Importer {
         statement.setString(index++, branchTerminal.name());
         statement.setDouble(index++, branchTerminal.kv());
         statement.setInt(index++, branchTerminal.areaNum());
-        statement.setString(index++, branchTerminal.areaName());
+        statement.setString(index++, branchTerminal.areaname());
         statement.setDouble(index++, branchTerminal.lat());
         statement.setDouble(index, branchTerminal.lon());
         statement.addBatch();
@@ -221,8 +222,6 @@ public final class Importer {
         statement.setString(index++, flowgate.con());
         statement.setDouble(index++, flowgate.rating());
         statement.setDouble(index++, flowgate.loadingbefore());
-        statement.setDouble(index++, flowgate.loadingafter());
-        statement.setDouble(index, flowgate.mwimpact());
         statement.addBatch();
       }
       statement.executeBatch();
