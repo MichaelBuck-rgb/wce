@@ -95,6 +95,13 @@
   "methods":[{"name":"<init>","parameterTypes":["java.lang.String","int","double","double","double","double","double"] }, {"name":"dfax","parameterTypes":[] }, {"name":"id","parameterTypes":[] }, {"name":"index","parameterTypes":[] }, {"name":"mwchange","parameterTypes":[] }, {"name":"mwimpact","parameterTypes":[] }, {"name":"pgen","parameterTypes":[] }, {"name":"pmax","parameterTypes":[] }]
 },
 {
+  "name":"com.powergem.worstcasetrlim.model.LineCostData",
+  "allDeclaredFields":true,
+  "queryAllDeclaredMethods":true,
+  "queryAllDeclaredConstructors":true,
+  "methods":[{"name":"<init>","parameterTypes":["int","float","float","float","float","float"] }, {"name":"id","parameterTypes":[] }, {"name":"length","parameterTypes":[] }, {"name":"maxRatingPerLine","parameterTypes":[] }, {"name":"maxAllowedFlowPerLine","parameterTypes":[] }, {"name":"upgradeCost","parameterTypes":[] }, {"name":"newLineCost","parameterTypes":[] }]
+},
+{
   "name":"com.powergem.worstcasetrlim.model.ILocation",
   "queryAllDeclaredMethods":true
 },
@@ -107,11 +114,18 @@
   "methods":[{"name":"<init>","parameterTypes":["int","int","java.lang.String","double","java.lang.String","double","double"] }, {"name":"busarea","parameterTypes":[] }, {"name":"busname","parameterTypes":[] }, {"name":"busnum","parameterTypes":[] }, {"name":"busvolt","parameterTypes":[] }, {"name":"id","parameterTypes":[] }, {"name":"lat","parameterTypes":[] }, {"name":"lon","parameterTypes":[] }]
 },
 {
+  "name":"com.powergem.worstcasetrlim.model.TransformerCostData",
+  "allDeclaredFields":true,
+  "queryAllDeclaredMethods":true,
+  "queryAllDeclaredConstructors":true,
+  "methods":[{"name":"<init>","parameterTypes":["int","float","float"] }, {"name":"id","parameterTypes":[] }, {"name":"perMWCost","parameterTypes":[] }, {"name":"fixedCost","parameterTypes":[] }]
+},
+{
   "name":"com.powergem.worstcasetrlim.model.WcResult",
   "allDeclaredFields":true,
   "queryAllDeclaredMethods":true,
   "queryAllDeclaredConstructors":true,
-  "methods":[{"name":"<init>","parameterTypes":["java.lang.String","java.lang.String","java.lang.String","java.util.List","java.util.List","java.util.List","java.util.List"] }]
+  "methods":[{"name":"<init>","parameterTypes":["java.lang.String","java.lang.String","java.lang.String","java.util.List","java.util.List","java.util.List","java.util.List","java.lang.String","java.util.List","java.util.List"] }]
 },
 {
   "name":"com.powergem.worstcasetrlim.model.WorstCaseTrLim",
