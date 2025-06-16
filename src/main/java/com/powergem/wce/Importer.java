@@ -143,7 +143,7 @@ public final class Importer {
   }
 
   private static List<BranchTerminal> decryptBranchTerminals(List<BranchTerminal> branchTerminals) {
-    return branchTerminals.stream().map(bt -> new BranchTerminal(bt.id(), bt.name(), bt.kv(), bt.areaNum(), bt.areaname(), decryptLat(bt.lat(), bt.lon()), decryptLon(bt.lat(), bt.lon()), bt.areaNum())).toList();
+    return branchTerminals.stream().map(bt -> new BranchTerminal(bt.id(), bt.name(), bt.kv(), bt.areanum(), bt.areaname(), decryptLat(bt.lat(), bt.lon()), decryptLon(bt.lat(), bt.lon()))).toList();
   }
 
   private static List<StressGen> decryptStressGens(List<StressGen> stressGens) {
@@ -199,7 +199,7 @@ public final class Importer {
         statement.setInt(index++, branchTerminal.id());
         statement.setString(index++, branchTerminal.name());
         statement.setDouble(index++, branchTerminal.kv());
-        statement.setInt(index++, branchTerminal.areaNum());
+        statement.setInt(index++, branchTerminal.areanum());
         statement.setString(index++, branchTerminal.areaname());
         statement.setDouble(index++, branchTerminal.lat());
         statement.setDouble(index, branchTerminal.lon());

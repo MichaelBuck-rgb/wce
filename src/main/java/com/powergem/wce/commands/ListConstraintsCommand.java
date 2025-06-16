@@ -98,7 +98,7 @@ public class ListConstraintsCommand implements Callable<Integer> {
   }
 
   private BranchTerminal toBranchTerminal(Thing thing) {
-    return new BranchTerminal(thing.id, thing.name, thing.kv, thing.areanum, thing.areaname, thing.lat, thing.lon, thing.areanum);
+    return new BranchTerminal(thing.id, thing.name, thing.kv, thing.areanum, thing.areaname, thing.lat, thing.lon);
   }
 
   private static Bus toBus(ResultSet resultSet) throws SQLException {
