@@ -8,10 +8,8 @@ import com.powergem.wce.entities.BusEntity;
 import com.powergem.wce.entities.ConstraintsEntity;
 import com.powergem.wce.entities.FlowgateEntity;
 import com.powergem.wce.entities.HarmerEntity;
-import com.powergem.worstcasetrlim.model.Bus;
-import com.powergem.worstcasetrlim.model.Flowgate;
+import com.powergem.worstcasetrlim.model.BranchTerminal;
 
-import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
@@ -157,6 +155,38 @@ public final class DataFile {
             resultSet.getInt("montype").orElseThrow(),
             resultSet.getInt("frbus").orElseThrow(),
             resultSet.getInt("tobus").orElseThrow()
+    );
+  }
+
+  public Optional<BranchTerminal> getBranchBus(int scenarioId, int id) {
+    try (UncheckedPreparedStatement statement = connection.prepareStatement("select * from branchterminals where scenarioId = ? and id = ?")) {
+      statement.setInt(1, scenarioId);
+      statement.setInt(2, id);
+      try (UncheckedResultSet resultSet = statement.executeQuery()) {
+        if (resultSet.next()) {
+          return Optional.of(toBranchTerminal(resultSet));
+        }
+      }
+    } catch (RuntimeException e) {
+      throw e;
+    } catch (SQLException e) {
+      throw new UncheckedSQLException(e);
+    } catch (Exception e) {
+      throw new RuntimeException(e);
+    }
+
+    return Optional.empty();
+  }
+
+  private BranchTerminal toBranchTerminal(UncheckedResultSet resultSet) {
+    return new BranchTerminal(
+            resultSet.getInt("id").orElseThrow(),
+            resultSet.getString("name").orElseThrow(),
+            resultSet.getDouble("kv").orElseThrow(),
+            resultSet.getInt("areanum").orElseThrow(),
+            resultSet.getString("areaname").orElseThrow(),
+            resultSet.getDouble("lat").orElseThrow(),
+            resultSet.getDouble("lon").orElseThrow()
     );
   }
 }
