@@ -41,10 +41,17 @@ public final class ListChildrenCommand implements Callable<Integer> {
       Optional<BusEntity> optionalBus = dataFile.getBus(this.busid);
       if (optionalBus.isPresent()) {
         optionalBus.ifPresent(bus -> {
-          System.out.printf("[Bus] ID: %d, Number: %d, Name: %s, Voltage: %.2f, Area: %s, TrLim: %f, Location: (%f, %f)%n", bus.id(), bus.busnum(), bus.busname(), bus.busvolt(), bus.busarea(), bus.trlime(), bus.lat(), bus.lon());
+          String location = toString(bus.lat(), bus.lon());
+          System.out.printf("[Bus] ID: %d, Number: %d, Name: %s, Voltage: %.2f, Area: %s, TrLim: %f, Location: %s%n", bus.id(), bus.busnum(), bus.busname(), bus.busvolt(), bus.busarea(), bus.trlime(), location);
           List<FlowgateEntity> flowgates = dataFile.getFlowgates(scenarioId, busid);
           flowgates.forEach(flowgate -> {
-            System.out.printf("  [Flowgate] id: %d, dfax: %f, trlim: %f, mon: '%s', con: '%s'%n", flowgate.id(), flowgate.dfax(), flowgate.trlim(), flowgate.mon(), flowgate.con());
+            String percentLoad = "%.2f".formatted(flowgate.loadingBefore());
+            if (flowgate.loadingBefore() >= 100) {
+              percentLoad = "\u001B[31m" + percentLoad + "\u001B[0m";
+            }
+
+            System.out.println("  [Flowgate]");
+            System.out.printf("    [id: %d, dfax: %f, trlim: %f, mon: '%s', con: '%s', rating: %.2f, %%load: %s]%n", flowgate.id(), flowgate.dfax(), flowgate.trlim(), flowgate.mon(), flowgate.con(), flowgate.rating(), percentLoad);
 
             List<ConstraintsEntity> constraints = dataFile.getConstraints(scenarioId, flowgate.id());
             constraints.forEach(constraint -> {
@@ -77,8 +84,24 @@ public final class ListChildrenCommand implements Callable<Integer> {
     return 0;
   }
 
+  private static String toString(double value, String format, double bad) {
+    if (value < bad) {
+      return format.formatted(value);
+    }
+    return "\u001B[31m" + format.formatted(value) + "\u001B[31m";
+  }
+
 
   private static String toString(BranchTerminal branchTerminal) {
-    return "id: %d, name: '%s', kv: %.2f, areanum: %d, areaname: '%s', (%f, %f)".formatted(branchTerminal.id(), branchTerminal.name(), branchTerminal.kv(), branchTerminal.areanum(), branchTerminal.areaname(), branchTerminal.lat(), branchTerminal.lon());
+    String location = toString(branchTerminal.lat(), branchTerminal.lon());
+    return "id: %d, name: '%s', kv: %.2f, areanum: %d, areaname: '%s', %s".formatted(branchTerminal.id(), branchTerminal.name(), branchTerminal.kv(), branchTerminal.areanum(), branchTerminal.areaname(), location);
+  }
+
+  private static String toString(double lat, double lon) {
+    if (lat == 0 && lon == 0) {
+      return "(\u001B[31m%f\u001B[0m, \u001B[31m%f\u001B[0m)".formatted(lat, lon);
+    } else {
+      return "(%f, %f)".formatted(lat, lon);
+    }
   }
 }
