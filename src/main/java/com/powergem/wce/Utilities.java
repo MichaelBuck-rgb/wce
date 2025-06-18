@@ -1,10 +1,7 @@
 package com.powergem.wce;
 
 import com.powergem.MonType;
-import com.powergem.wce.entities.ConstraintsEntity;
-import com.powergem.wce.entities.FlowgateEntity;
-import com.powergem.wce.entities.HarmerEntity;
-import com.powergem.wce.entities.LineCostDatumEntity;
+import com.powergem.wce.entities.*;
 import com.powergem.worstcasetrlim.model.BranchTerminal;
 
 import java.util.LinkedHashMap;
@@ -138,5 +135,19 @@ public final class Utilities {
     return m.entrySet().stream()
             .map(entry -> bold(entry.getKey()) + ": " + entry.getValue())
             .collect(Collectors.joining(", "));
+  }
+
+  public static String toString(BusEntity bus) {
+    Map<String, String> map = new LinkedHashMap<>();
+
+    map.put("id", String.valueOf(bus.id()));
+    map.put("busnum", String.valueOf(bus.busnum()));
+    map.put("busname", "'" + bus.busname() + "'");
+    map.put("busvolt", String.format("%.2f", bus.busvolt()));
+    map.put("busarea", "'" + bus.busarea() + "'");
+    map.put("trlim", String.valueOf(bus.trlim()));
+    map.put("location", toString(bus.lat(), bus.lon()));
+
+    return toString(map);
   }
 }

@@ -243,4 +243,25 @@ public final class DataFile {
             resultSet.getFloat("new_line_cost").orElseThrow()
     );
   }
+
+  public List<BusEntity> getBuses(int scenarioId) {
+    List<BusEntity> buses = new ArrayList<>();
+    try (UncheckedPreparedStatement statement = connection.prepareStatement("select * from buses where scenarioId = ?")) {
+      statement.setInt(1, scenarioId);
+      try (UncheckedResultSet resultSet = statement.executeQuery()) {
+        while (resultSet.next()) {
+          BusEntity bus = toBus(resultSet);
+          buses.add(bus);
+        }
+      }
+    } catch (RuntimeException e) {
+      throw e;
+    } catch (SQLException e) {
+      throw new UncheckedSQLException(e);
+    } catch (Exception e) {
+      throw new RuntimeException(e);
+    }
+
+    return buses;
+  }
 }
