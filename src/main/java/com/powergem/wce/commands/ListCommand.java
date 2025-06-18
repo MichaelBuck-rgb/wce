@@ -10,6 +10,7 @@ import java.util.concurrent.Callable;
                 ListScenariosCommand.class,
                 ListUnlocatedCommand.class,
                 ListChildrenCommand.class,
+                ListFlowgateCommand.class
         },
         usageHelpWidth = 132
 )

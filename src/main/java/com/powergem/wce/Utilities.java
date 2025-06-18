@@ -1,14 +1,107 @@
 package com.powergem.wce;
 
-import java.sql.Connection;
+import com.powergem.MonType;
+import com.powergem.wce.entities.ConstraintsEntity;
+import com.powergem.wce.entities.FlowgateEntity;
+import com.powergem.wce.entities.HarmerEntity;
+import com.powergem.worstcasetrlim.model.BranchTerminal;
+
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 public final class Utilities {
 
   private Utilities() {
   }
 
-  public static void childrenOfBus(Connection connetion) {
+  public static void dumpFlowgate(FlowgateEntity flowgate, DataFile dataFile, int scenarioId, int indent) {
+    String strIndent = " ".repeat(indent);
 
+    System.out.printf("%n%s[Flowgate] [%s]%n", strIndent, toString(flowgate));
+    List<ConstraintsEntity> constraints = dataFile.getConstraints(scenarioId, flowgate.id());
+    constraints.forEach(constraint -> {
+      MonType.getMonType(constraint.monType()).ifPresent(monType -> {
+        if (monType == MonType.LINE) {
+          BranchTerminal from = dataFile.getBranchBus(scenarioId, constraint.frBus()).orElseThrow();
+          BranchTerminal to = dataFile.getBranchBus(scenarioId, constraint.toBus()).orElseThrow();
+          System.out.printf("%s  [Line Constraint]%n", strIndent);
+          System.out.printf("%s    [%s]%n", strIndent, toString(from));
+          System.out.printf("%s    [%s]%n", strIndent, toString(to));
+        } else if (monType == MonType.TRANSFORMER) {
+          BranchTerminal from = dataFile.getBranchBus(scenarioId, constraint.frBus()).orElseThrow();
+          System.out.printf("%s  [Transformer Constraint]%n", strIndent);
+          System.out.printf("%s    [%s]%n", strIndent, toString(from));
+        } else {
+          System.out.printf("%s  [Unknown Constraint]", strIndent);
+        }
+      });
+    });
+
+    System.out.printf("%s  [Harmers]%n", strIndent);
+    dataFile.getHarmers(scenarioId, flowgate.id()).forEach(harmer -> System.out.printf("%s    %s]%n", strIndent, toString(harmer)));
+  }
+
+  public static String toString(FlowgateEntity flowgate) {
+    String percentLoad = "%.2f".formatted(flowgate.loadingBefore());
+    if (flowgate.loadingBefore() >= 100) {
+      percentLoad = "\u001B[31m" + percentLoad + "\u001B[0m";
+    }
+
+    LinkedHashMap<String, String> map = new LinkedHashMap<>(6);
+    map.put("id", String.valueOf(flowgate.id()));
+    map.put("dfax", String.valueOf(flowgate.dfax()));
+    map.put("trlim", String.valueOf(flowgate.trlim()));
+    map.put("mon", "'" + flowgate.mon() + "'");
+    map.put("con", "'" + flowgate.con() + "'");
+    map.put("rating", String.format("%.2f", flowgate.rating()));
+    map.put("%load", percentLoad);
+
+    return toString(map);
+  }
+
+  public static String toString(HarmerEntity harmer) {
+    LinkedHashMap<String, String> map = new LinkedHashMap<>(6);
+    map.put("id", String.valueOf(harmer.id()));
+    map.put("dfax", String.valueOf(harmer.dfax()));
+    map.put("MW Change", String.valueOf(harmer.mwchange()));
+    map.put("MW Impact", String.valueOf(harmer.mwimpact()));
+    map.put("pmax", String.valueOf(harmer.pmax()));
+    map.put("pgen", String.valueOf(harmer.pgen()));
+
+    return toString(map);
+  }
+
+  public static String toString(BranchTerminal branchTerminal) {
+    String location = toString(branchTerminal.lat(), branchTerminal.lon());
+    LinkedHashMap<String, String> map = new LinkedHashMap<>(6);
+
+    map.put("id", String.valueOf(branchTerminal.id()));
+    map.put("name", "'" + branchTerminal.name() + "'");
+    map.put("kv", String.format("%.2f", branchTerminal.kv()));
+    map.put("areanum", String.valueOf(branchTerminal.areanum()));
+    map.put("areaname", "'" + branchTerminal.areaname() + "'");
+    map.put("Location", location);
+
+    return toString(map);
+  }
+
+  public static String toString(double lat, double lon) {
+    if (lat == 0 && lon == 0) {
+      return "(\u001B[31m%f\u001B[0m, \u001B[31m%f\u001B[0m)".formatted(lat, lon);
+    } else {
+      return "(%f, %f)".formatted(lat, lon);
+    }
+  }
+
+  public static String bold(String s) {
+    return "\u001B[1m" + s + "\u001B[22m";
+  }
+
+  public static String toString(Map<String, String> m) {
+    return m.entrySet().stream()
+            .map(entry -> bold(entry.getKey()) + ": " + entry.getValue())
+            .collect(Collectors.joining(", "));
   }
 }

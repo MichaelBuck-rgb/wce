@@ -65,12 +65,13 @@ public final class Importer {
 
       // create indices
       try (Statement statement = connection.createStatement()) {
-        statement.execute("CREATE INDEX bus_index ON buses (scenarioId, id)");
-        statement.execute("CREATE INDEX stressgens_index ON stressgens (scenarioId, id)");
-        statement.execute("CREATE INDEX branchterminals_index ON branchterminals (scenarioId, id)");
-        statement.execute("CREATE INDEX flowgates_index ON flowgates (scenarioId, id, busid)");
-        statement.execute("CREATE INDEX harmers_index ON harmers (scenarioId, id, flowgateId)");
-        statement.execute("CREATE INDEX constraints_index ON constraints (scenarioId, flowgateId)");
+        statement.execute("CREATE INDEX bus_idx ON buses (scenarioId, id)");
+        statement.execute("CREATE INDEX busnum_idx ON buses (scenarioId, busnum)");
+        statement.execute("CREATE INDEX stressgens_idx ON stressgens (scenarioId, id)");
+        statement.execute("CREATE INDEX branchterminals_idx ON branchterminals (scenarioId, id)");
+        statement.execute("CREATE INDEX flowgates_idx ON flowgates (scenarioId, id, busid)");
+        statement.execute("CREATE INDEX harmers_idx ON harmers (scenarioId, id, flowgateId)");
+        statement.execute("CREATE INDEX constraints_idx ON constraints (scenarioId, flowgateId)");
       }
 
     } catch (SQLException e) {

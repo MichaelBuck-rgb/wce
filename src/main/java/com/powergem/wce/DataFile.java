@@ -22,9 +22,9 @@ public final class DataFile {
     this.connection = connection;
   }
 
-  public Optional<BusEntity> getBus(int id) {
-    try (UncheckedPreparedStatement statement = connection.prepareStatement("select * from buses where id = ?")) {
-      statement.setInt(1, id);
+  public Optional<BusEntity> getBus(int busNum) {
+    try (UncheckedPreparedStatement statement = connection.prepareStatement("select * from buses where busnum = ?")) {
+      statement.setInt(1, busNum);
       try (UncheckedResultSet resultSet = statement.executeQuery()) {
         if (resultSet.next()) {
           return Optional.of(toBus(resultSet));
@@ -40,11 +40,14 @@ public final class DataFile {
     }
   }
 
-  public List<FlowgateEntity> getFlowgates(int scenarioId, int busId) {
+  public List<FlowgateEntity> getFlowgates(int scenarioId, int busNum) {
+    int busid = getBus(busNum).orElseThrow()
+            .id();
+
     List<FlowgateEntity> flowgates = new ArrayList<>();
     try (UncheckedPreparedStatement statement = connection.prepareStatement("select * from flowgates where scenarioId = ? and busid = ?")) {
       statement.setInt(1, scenarioId);
-      statement.setInt(2, busId);
+      statement.setInt(2, busid);
       try (UncheckedResultSet resultSet = statement.executeQuery()) {
         while (resultSet.next()) {
           FlowgateEntity flowgateEntity = getFlowgateEntity(resultSet);
@@ -188,5 +191,25 @@ public final class DataFile {
             resultSet.getDouble("lat").orElseThrow(),
             resultSet.getDouble("lon").orElseThrow()
     );
+  }
+
+  public Optional<FlowgateEntity> getFlowgateById(int id, int scenarioId) {
+    try (UncheckedPreparedStatement statement = connection.prepareStatement("select * from flowgates where scenarioId = ? and id = ?")) {
+      statement.setInt(1, scenarioId);
+      statement.setInt(2, id);
+      try (UncheckedResultSet resultSet = statement.executeQuery()) {
+        if (resultSet.next()) {
+          return Optional.of(getFlowgateEntity(resultSet));
+        }
+      }
+    } catch (RuntimeException e) {
+      throw e;
+    } catch (SQLException e) {
+      throw new UncheckedSQLException(e);
+    } catch (Exception e) {
+      throw new RuntimeException(e);
+    }
+
+    return Optional.empty();
   }
 }
