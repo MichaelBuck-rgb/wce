@@ -4,10 +4,7 @@ import com.powergem.sql.UncheckedConnection;
 import com.powergem.sql.UncheckedPreparedStatement;
 import com.powergem.sql.UncheckedResultSet;
 import com.powergem.sql.UncheckedSQLException;
-import com.powergem.wce.entities.BusEntity;
-import com.powergem.wce.entities.ConstraintsEntity;
-import com.powergem.wce.entities.FlowgateEntity;
-import com.powergem.wce.entities.HarmerEntity;
+import com.powergem.wce.entities.*;
 import com.powergem.worstcasetrlim.model.BranchTerminal;
 
 import java.sql.SQLException;
@@ -22,9 +19,10 @@ public final class DataFile {
     this.connection = connection;
   }
 
-  public Optional<BusEntity> getBus(int busNum) {
-    try (UncheckedPreparedStatement statement = connection.prepareStatement("select * from buses where busnum = ?")) {
-      statement.setInt(1, busNum);
+  public Optional<BusEntity> getBus(int busNum, int scenarioId) {
+    try (UncheckedPreparedStatement statement = connection.prepareStatement("select * from buses where scenarioId = ? and busnum = ?")) {
+      statement.setInt(1, scenarioId);
+      statement.setInt(2, busNum);
       try (UncheckedResultSet resultSet = statement.executeQuery()) {
         if (resultSet.next()) {
           return Optional.of(toBus(resultSet));
@@ -41,7 +39,7 @@ public final class DataFile {
   }
 
   public List<FlowgateEntity> getFlowgates(int scenarioId, int busNum) {
-    int busid = getBus(busNum).orElseThrow()
+    int busid = getBus(busNum, scenarioId).orElseThrow()
             .id();
 
     List<FlowgateEntity> flowgates = new ArrayList<>();
@@ -97,7 +95,8 @@ public final class DataFile {
             resultSet.getString("mon").orElseThrow(),
             resultSet.getString("con").orElseThrow(),
             resultSet.getDouble("rating").orElseThrow(),
-            resultSet.getDouble("loadingbefore").orElseThrow()
+            resultSet.getDouble("loadingbefore").orElseThrow(),
+            resultSet.getInt("equipment_index").orElseThrow()
     );
   }
 
@@ -211,5 +210,37 @@ public final class DataFile {
     }
 
     return Optional.empty();
+  }
+
+  public Optional<LineCostDatumEntity> getLineCostDatumById(int id, int scenarioId) {
+    try (UncheckedPreparedStatement statement = connection.prepareStatement("select * from line_cost_data where scenarioId = ? and id = ?")) {
+      statement.setInt(1, scenarioId);
+      statement.setInt(2, id);
+      try (UncheckedResultSet resultSet = statement.executeQuery()) {
+        if (resultSet.next()) {
+          return Optional.of(getLineCostDatum(resultSet));
+        }
+      }
+    } catch (RuntimeException e) {
+      throw e;
+    } catch (SQLException e) {
+      throw new UncheckedSQLException(e);
+    } catch (Exception e) {
+      throw new RuntimeException(e);
+    }
+
+    return Optional.empty();
+  }
+
+  private LineCostDatumEntity getLineCostDatum(UncheckedResultSet resultSet) {
+    return new LineCostDatumEntity(
+            resultSet.getInt("scenarioId").orElseThrow(),
+            resultSet.getInt("id").orElseThrow(),
+            resultSet.getFloat("length").orElseThrow(),
+            resultSet.getFloat("max_rating_per_line").orElseThrow(),
+            resultSet.getFloat("max_allowed_flow_per_line").orElseThrow(),
+            resultSet.getFloat("upgrade_cost").orElseThrow(),
+            resultSet.getFloat("new_line_cost").orElseThrow()
+    );
   }
 }

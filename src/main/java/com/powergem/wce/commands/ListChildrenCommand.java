@@ -36,7 +36,7 @@ public final class ListChildrenCommand implements Callable<Integer> {
       Importer.importData(this.jsonFile, connection);
 
       DataFile dataFile = new DataFile(new UncheckedConnection(connection));
-      Optional<BusEntity> optionalBus = dataFile.getBus(this.busNumber);
+      Optional<BusEntity> optionalBus = dataFile.getBus(this.busNumber, scenarioId);
       if (optionalBus.isPresent()) {
         optionalBus.ifPresent(bus -> {
           String location = Utilities.toString(bus.lat(), bus.lon());

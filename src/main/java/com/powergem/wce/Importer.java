@@ -1,5 +1,6 @@
 package com.powergem.wce;
 
+import com.powergem.sql.UncheckedSQLException;
 import com.powergem.worstcasetrlim.Utilities;
 import com.powergem.worstcasetrlim.model.*;
 
@@ -18,14 +19,17 @@ public final class Importer {
   private static final String BRANCHTERMINALS_CREATE_TABLE = "CREATE TABLE branchterminals (scenarioId INTEGER, id INTEGER, name TEXT, kv REAL, areanum INTEGER, areaname TEXT, lat REAL, lon REAL)";
   private static final String BRANCHTERMINALS_INSERT_STATEMENT_TEMPLATE = "INSERT INTO branchterminals VALUES(?, ?, ?, ?, ?, ?, ?, ?)";
 
-  private static final String FLOWGATES_CREATE_TABLE = "CREATE TABLE flowgates (scenarioId INTEGER, id INTEGER, busid INTEGER, dfax REAL, trlim REAL, mon TEXT, con TEXT, rating REAL, loadingbefore REAL)";
-  private static final String FLOWGATES_INSERT_STATEMENT_TEMPLATE = "INSERT INTO flowgates VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)";
+  private static final String FLOWGATES_CREATE_TABLE = "CREATE TABLE flowgates (scenarioId INTEGER, id INTEGER, busid INTEGER, dfax REAL, trlim REAL, mon TEXT, con TEXT, rating REAL, loadingbefore REAL, equipment_index INTEGER)";
+  private static final String FLOWGATES_INSERT_STATEMENT_TEMPLATE = "INSERT INTO flowgates VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
   private static final String HARMERS_CREATE_TABLE = "CREATE TABLE harmers (scenarioId INTEGER, id INTEGER, flowgateId INTEGER, stressGenId INTEGER, dfax REAL, mwchange REAL, mwimpact REAL, pmax REAL, pgen REAL)";
   private static final String HARMERS_INSERT_STATEMENT_TEMPLATE = "INSERT INTO harmers VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
   private static final String CONSTRAINTS_CREATE_TABLE = "CREATE TABLE constraints (scenarioId INTEGER, flowgateid INTEGER, montype INTEGER, frbus INTEGER, tobus INTEGER)";
   private static final String CONSTRAINTS_INSERT_STATEMENT_TEMPLATE = "INSERT INTO constraints VALUES(?, ?, ?, ?, ?)";
+
+  private static final String LINE_COST_DATA_CREATE_TABLE = "CREATE TABLE line_cost_data (scenarioId INTEGER, id INTEGER, length REAL, max_rating_per_line REAL, max_allowed_flow_per_line REAL, upgrade_cost REAL, new_line_cost REAL)";
+//  private static final String CONSTRAINTS_INSERT_STATEMENT_TEMPLATE = "INSERT INTO constraints VALUES(?, ?, ?, ?, ?)";
 
   private Importer() {
   }
@@ -51,6 +55,7 @@ public final class Importer {
         statement.execute(FLOWGATES_CREATE_TABLE);
         statement.execute(HARMERS_CREATE_TABLE);
         statement.execute(CONSTRAINTS_CREATE_TABLE);
+        statement.execute(LINE_COST_DATA_CREATE_TABLE);
       }
 
       for (WcResult wcResult : worstCaseTrLim.wcResults()) {
@@ -61,6 +66,7 @@ public final class Importer {
         createFlowgatesTable(wcResult.flowgates(), id, connection);
         createHarmersTable(wcResult.flowgates(), id, connection);
         createConstraintsTable(wcResult.flowgates(), id, connection);
+        createLineCostDataTable(wcResult.lineCostData(), id, connection);
       }
 
       // create indices
@@ -72,10 +78,31 @@ public final class Importer {
         statement.execute("CREATE INDEX flowgates_idx ON flowgates (scenarioId, id, busid)");
         statement.execute("CREATE INDEX harmers_idx ON harmers (scenarioId, id, flowgateId)");
         statement.execute("CREATE INDEX constraints_idx ON constraints (scenarioId, flowgateId)");
+        statement.execute("CREATE INDEX line_cost_data_idx ON line_cost_data (scenarioId, id)");
       }
 
     } catch (SQLException e) {
       throw new RuntimeException(e);
+    }
+  }
+
+  private static void createLineCostDataTable(List<LineCostData> lineCostData, int scenarioId, Connection connection) throws SQLException {
+    try (PreparedStatement statement = connection.prepareStatement("INSERT INTO line_cost_data VALUES(?, ?, ?, ?, ?, ?, ?)")) {
+      lineCostData.forEach(lineCostDatum -> {
+        try {
+          statement.setInt(1, scenarioId);
+          statement.setInt(2, lineCostDatum.id());
+          statement.setFloat(3, lineCostDatum.length());
+          statement.setFloat(4, lineCostDatum.maxRatingPerLine());
+          statement.setFloat(5, lineCostDatum.maxAllowedFlowPerLine());
+          statement.setFloat(6, lineCostDatum.upgradeCost());
+          statement.setFloat(7, lineCostDatum.newLineCost());
+          statement.addBatch();
+        } catch (SQLException e) {
+          throw new UncheckedSQLException(e);
+        }
+      });
+      statement.executeBatch();
     }
   }
 
@@ -213,16 +240,35 @@ public final class Importer {
   private static void createFlowgatesTable(Collection<Flowgate> flowgates, int scenarioId, Connection connection) throws SQLException {
     try (PreparedStatement statement = connection.prepareStatement(FLOWGATES_INSERT_STATEMENT_TEMPLATE)) {
       for (Flowgate flowgate : flowgates) {
-        int index = 1;
-        statement.setInt(index++, scenarioId);
-        statement.setInt(index++, flowgate.id());
-        statement.setInt(index++, flowgate.busid());
-        statement.setDouble(index++, flowgate.dfax());
-        statement.setDouble(index++, flowgate.trlim());
-        statement.setString(index++, flowgate.mon());
-        statement.setString(index++, flowgate.con());
-        statement.setDouble(index++, flowgate.rating());
-        statement.setDouble(index++, flowgate.loadingbefore());
+
+        int[] equipmentIndices = flowgate.equipmentIndex();
+        if (equipmentIndices.length > 0) {
+          for (int equipmentIndex : equipmentIndices) {
+            int index = 1;
+            statement.setInt(index++, scenarioId);
+            statement.setInt(index++, flowgate.id());
+            statement.setInt(index++, flowgate.busid());
+            statement.setDouble(index++, flowgate.dfax());
+            statement.setDouble(index++, flowgate.trlim());
+            statement.setString(index++, flowgate.mon());
+            statement.setString(index++, flowgate.con());
+            statement.setDouble(index++, flowgate.rating());
+            statement.setDouble(index++, flowgate.loadingbefore());
+            statement.setInt(index++, equipmentIndex);
+          }
+        } else {
+          int index = 1;
+          statement.setInt(index++, scenarioId);
+          statement.setInt(index++, flowgate.id());
+          statement.setInt(index++, flowgate.busid());
+          statement.setDouble(index++, flowgate.dfax());
+          statement.setDouble(index++, flowgate.trlim());
+          statement.setString(index++, flowgate.mon());
+          statement.setString(index++, flowgate.con());
+          statement.setDouble(index++, flowgate.rating());
+          statement.setDouble(index++, flowgate.loadingbefore());
+          statement.setNull(index++, Types.INTEGER);
+        }
         statement.addBatch();
       }
       statement.executeBatch();

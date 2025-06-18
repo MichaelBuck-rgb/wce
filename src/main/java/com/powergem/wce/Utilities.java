@@ -4,6 +4,7 @@ import com.powergem.MonType;
 import com.powergem.wce.entities.ConstraintsEntity;
 import com.powergem.wce.entities.FlowgateEntity;
 import com.powergem.wce.entities.HarmerEntity;
+import com.powergem.wce.entities.LineCostDatumEntity;
 import com.powergem.worstcasetrlim.model.BranchTerminal;
 
 import java.util.LinkedHashMap;
@@ -26,9 +27,12 @@ public final class Utilities {
         if (monType == MonType.LINE) {
           BranchTerminal from = dataFile.getBranchBus(scenarioId, constraint.frBus()).orElseThrow();
           BranchTerminal to = dataFile.getBranchBus(scenarioId, constraint.toBus()).orElseThrow();
-          System.out.printf("%s  [Line Constraint]%n", strIndent);
-          System.out.printf("%s    [%s]%n", strIndent, toString(from));
-          System.out.printf("%s    [%s]%n", strIndent, toString(to));
+          System.out.printf("%n%s  [Line Constraint]%n", strIndent);
+          System.out.printf("%s    [From] [%s]%n", strIndent, toString(from));
+          System.out.printf("%s      [To] [%s]%n", strIndent, toString(to));
+
+          LineCostDatumEntity lineCostDatum = dataFile.getLineCostDatumById(flowgate.equipment_index(), scenarioId).orElseThrow();
+          System.out.printf("%s    [Cost] [%s]%n", strIndent, toString(lineCostDatum));
         } else if (monType == MonType.TRANSFORMER) {
           BranchTerminal from = dataFile.getBranchBus(scenarioId, constraint.frBus()).orElseThrow();
           System.out.printf("%s  [Transformer Constraint]%n", strIndent);
@@ -39,8 +43,21 @@ public final class Utilities {
       });
     });
 
-    System.out.printf("%s  [Harmers]%n", strIndent);
+    System.out.printf("%n%s  [Harmers]%n", strIndent);
     dataFile.getHarmers(scenarioId, flowgate.id()).forEach(harmer -> System.out.printf("%s    %s]%n", strIndent, toString(harmer)));
+  }
+
+  private static String toString(LineCostDatumEntity lineCostDatum) {
+    Map<String, String> map = new LinkedHashMap<>(6);
+
+    map.put("id", String.valueOf(lineCostDatum.id()));
+    map.put("length", String.valueOf(lineCostDatum.length()));
+    map.put("maxRatingPerLine", String.valueOf(lineCostDatum.maxRatingPerLine()));
+    map.put("maxAllowedFlowPerLine", String.valueOf(lineCostDatum.maxAllowedFlowPerLine()));
+    map.put("upgradeCost", String.valueOf(lineCostDatum.upgradeCost()));
+    map.put("newLineCost", String.valueOf(lineCostDatum.newLineCost()));
+
+    return toString(map);
   }
 
   public static String toString(FlowgateEntity flowgate) {

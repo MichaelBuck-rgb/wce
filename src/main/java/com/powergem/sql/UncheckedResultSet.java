@@ -138,4 +138,16 @@ public final class UncheckedResultSet implements AutoCloseable {
       throw new RuntimeException(e);
     }
   }
+
+  public Optional<Float> getFloat(String columnLabel) {
+    try {
+      float aFloat = this.resultSet.getFloat(columnLabel);
+      if (this.resultSet.wasNull()) {
+        return Optional.empty();
+      }
+      return Optional.of(aFloat);
+    } catch (SQLException e) {
+      throw new RuntimeException(e);
+    }
+  }
 }
