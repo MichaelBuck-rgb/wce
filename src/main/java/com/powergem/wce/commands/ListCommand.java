@@ -9,7 +9,7 @@ import java.util.concurrent.Callable;
         subcommands = {
                 ListScenariosCommand.class,
                 ListUnlocatedCommand.class,
-                ListChildrenCommand.class,
+                ListBusCommand.class,
                 ListFlowgateCommand.class
         },
         usageHelpWidth = 132

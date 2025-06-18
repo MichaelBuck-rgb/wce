@@ -22,42 +22,51 @@ public final class Utilities {
 
     System.out.printf("%n%s[Flowgate] [%s]%n", strIndent, toString(flowgate));
     List<ConstraintsEntity> constraints = dataFile.getConstraints(scenarioId, flowgate.id());
-    constraints.forEach(constraint -> {
-      MonType.getMonType(constraint.monType()).ifPresent(monType -> {
-        if (monType == MonType.LINE) {
-          BranchTerminal from = dataFile.getBranchBus(scenarioId, constraint.frBus()).orElseThrow();
-          BranchTerminal to = dataFile.getBranchBus(scenarioId, constraint.toBus()).orElseThrow();
-          System.out.printf("%n%s  [Line Constraint]%n", strIndent);
-          System.out.printf("%s    [From] [%s]%n", strIndent, toString(from));
-          System.out.printf("%s      [To] [%s]%n", strIndent, toString(to));
+    constraints.forEach(constraint -> MonType.getMonType(constraint.monType()).ifPresent(monType -> {
+      if (monType == MonType.LINE) {
+        BranchTerminal from = dataFile.getBranchBus(scenarioId, constraint.frBus()).orElseThrow();
+        BranchTerminal to = dataFile.getBranchBus(scenarioId, constraint.toBus()).orElseThrow();
+        System.out.printf("%n%s  [Line Constraint]%n", strIndent);
+        System.out.printf("%s    [From] [%s]%n", strIndent, toString(from));
+        System.out.printf("%s      [To] [%s]%n", strIndent, toString(to));
 
-          LineCostDatumEntity lineCostDatum = dataFile.getLineCostDatumById(flowgate.equipment_index(), scenarioId).orElseThrow();
-          System.out.printf("%s    [Cost] [%s]%n", strIndent, toString(lineCostDatum));
-        } else if (monType == MonType.TRANSFORMER) {
-          BranchTerminal from = dataFile.getBranchBus(scenarioId, constraint.frBus()).orElseThrow();
-          System.out.printf("%s  [Transformer Constraint]%n", strIndent);
-          System.out.printf("%s    [%s]%n", strIndent, toString(from));
-        } else {
-          System.out.printf("%s  [Unknown Constraint]", strIndent);
-        }
-      });
-    });
+        LineCostDatumEntity lineCostDatum = dataFile.getLineCostDatumById(flowgate.equipment_index(), scenarioId).orElseThrow();
+        System.out.printf("%s    [Cost] [%s]%n", strIndent, toString(lineCostDatum));
+      } else if (monType == MonType.TRANSFORMER) {
+        BranchTerminal from = dataFile.getBranchBus(scenarioId, constraint.frBus()).orElseThrow();
+        System.out.printf("%s  [Transformer Constraint]%n", strIndent);
+        System.out.printf("%s    [%s]%n", strIndent, toString(from));
+      } else {
+        System.out.printf("%s  [Unknown Constraint]", strIndent);
+      }
+    }));
 
     System.out.printf("%n%s  [Harmers]%n", strIndent);
     dataFile.getHarmers(scenarioId, flowgate.id()).forEach(harmer -> System.out.printf("%s    %s]%n", strIndent, toString(harmer)));
   }
 
   private static String toString(LineCostDatumEntity lineCostDatum) {
+    String strLength = lengthToString(lineCostDatum.length());
+
     Map<String, String> map = new LinkedHashMap<>(6);
 
     map.put("id", String.valueOf(lineCostDatum.id()));
-    map.put("length", String.valueOf(lineCostDatum.length()));
+    map.put("length", strLength);
     map.put("maxRatingPerLine", String.valueOf(lineCostDatum.maxRatingPerLine()));
     map.put("maxAllowedFlowPerLine", String.valueOf(lineCostDatum.maxAllowedFlowPerLine()));
     map.put("upgradeCost", String.valueOf(lineCostDatum.upgradeCost()));
     map.put("newLineCost", String.valueOf(lineCostDatum.newLineCost()));
 
     return toString(map);
+  }
+
+  private static String lengthToString(double length) {
+    String strLength = String.valueOf(length);
+    if (length > 0) {
+      return strLength;
+    }
+
+    return red(strLength);
   }
 
   public static String toString(FlowgateEntity flowgate) {
@@ -70,8 +79,8 @@ public final class Utilities {
     map.put("id", String.valueOf(flowgate.id()));
     map.put("dfax", String.valueOf(flowgate.dfax()));
     map.put("trlim", String.valueOf(flowgate.trlim()));
-    map.put("mon", "'" + flowgate.mon() + "'");
-    map.put("con", "'" + flowgate.con() + "'");
+    map.put("mon", "'" + flowgate.mon().trim() + "'");
+    map.put("con", "'" + flowgate.con().trim() + "'");
     map.put("rating", String.format("%.2f", flowgate.rating()));
     map.put("%load", percentLoad);
 
@@ -106,14 +115,23 @@ public final class Utilities {
 
   public static String toString(double lat, double lon) {
     if (lat == 0 && lon == 0) {
-      return "(\u001B[31m%f\u001B[0m, \u001B[31m%f\u001B[0m)".formatted(lat, lon);
-    } else {
-      return "(%f, %f)".formatted(lat, lon);
+      return "(" + red(String.valueOf(lat)) + ", " + red(String.valueOf(lon)) + ")";
     }
+    return "(%f, %f)".formatted(lat, lon);
+  }
+
+  public static String red(String s) {
+    if (Boolean.getBoolean("wce.useAnsi")) {
+      return "\u001B[31m" + s + "\u001B[0m";
+    }
+    return s;
   }
 
   public static String bold(String s) {
-    return "\u001B[1m" + s + "\u001B[22m";
+    if (Boolean.getBoolean("wce.useAnsi")) {
+      return "\u001B[1m" + s + "\u001B[22m";
+    }
+    return s;
   }
 
   public static String toString(Map<String, String> m) {
