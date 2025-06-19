@@ -92,8 +92,8 @@ public final class DataFile {
             resultSet.getInt("busid").orElseThrow(),
             resultSet.getDouble("dfax").orElseThrow(),
             resultSet.getDouble("trlim").orElseThrow(),
-            resultSet.getString("mon").orElseThrow(),
-            resultSet.getString("con").orElseThrow(),
+            resultSet.getString("mon").orElseThrow().trim(),
+            resultSet.getString("con").orElseThrow().trim(),
             resultSet.getDouble("rating").orElseThrow(),
             resultSet.getDouble("loadingbefore").orElseThrow(),
             resultSet.getInt("equipment_index").orElseThrow()
@@ -105,9 +105,9 @@ public final class DataFile {
             resultSet.getInt("scenarioId").orElseThrow(),
             resultSet.getInt("id").orElseThrow(),
             resultSet.getInt("busnum").orElseThrow(),
-            resultSet.getString("busname").orElseThrow(),
+            resultSet.getString("busname").orElseThrow().trim(),
             resultSet.getDouble("busvolt").orElseThrow(),
-            resultSet.getString("busarea").orElseThrow(),
+            resultSet.getString("busarea").orElseThrow().trim(),
             resultSet.getDouble("trlim").orElseThrow(),
             resultSet.getDouble("lat").orElseThrow(),
             resultSet.getDouble("lon").orElseThrow()
@@ -183,10 +183,10 @@ public final class DataFile {
   private BranchTerminal toBranchTerminal(UncheckedResultSet resultSet) {
     return new BranchTerminal(
             resultSet.getInt("id").orElseThrow(),
-            resultSet.getString("name").orElseThrow(),
+            resultSet.getString("name").orElseThrow().trim(),
             resultSet.getDouble("kv").orElseThrow(),
             resultSet.getInt("areanum").orElseThrow(),
-            resultSet.getString("areaname").orElseThrow(),
+            resultSet.getString("areaname").orElseThrow().trim(),
             resultSet.getDouble("lat").orElseThrow(),
             resultSet.getDouble("lon").orElseThrow()
     );
@@ -244,9 +244,25 @@ public final class DataFile {
     );
   }
 
-  public List<BusEntity> getBuses(int scenarioId) {
+  public enum BusOrderBy {
+    NONE,
+    NUM,
+    NAME,
+    AREA,
+    VOLTAGE,
+  }
+
+  public List<BusEntity> getBuses(int scenarioId, BusOrderBy orderBy) {
+    String query = "select * from buses where scenarioId = ? " + switch (orderBy) {
+      case NONE -> "";
+      case NUM -> "order by busnum";
+      case NAME -> "order by busname";
+      case AREA -> "order by busarea";
+      case VOLTAGE -> "order by busvolt";
+    };
+
     List<BusEntity> buses = new ArrayList<>();
-    try (UncheckedPreparedStatement statement = connection.prepareStatement("select * from buses where scenarioId = ?")) {
+    try (UncheckedPreparedStatement statement = connection.prepareStatement(query)) {
       statement.setInt(1, scenarioId);
       try (UncheckedResultSet resultSet = statement.executeQuery()) {
         while (resultSet.next()) {

@@ -20,8 +20,11 @@ public final class ListBusesCommand implements Callable<Integer> {
   @CommandLine.Option(names = {"-s", "--scenario"}, description = "The ID of the scenario to get the bus from.", defaultValue = "1")
   private int scenarioId = 1;
 
-  @CommandLine.Option(names = {"-na", "--no-ansi"}, description = "Do not use ANSI codes in the output")
+  @CommandLine.Option(names = {"-n", "--no-ansi"}, description = "Do not use ANSI codes in the output")
   private boolean noAnsi = false;
+
+  @CommandLine.Option(names = {"-o", "--order-by"}, description = "Column to order by. Valid values: ${COMPLETION-CANDIDATES}")
+  private DataFile.BusOrderBy orderBy = DataFile.BusOrderBy.NONE;
 
   @Override
   public Integer call() throws Exception {
@@ -33,7 +36,8 @@ public final class ListBusesCommand implements Callable<Integer> {
       Importer.importData(this.jsonFile, connection);
 
       DataFile dataFile = new DataFile(new UncheckedConnection(connection));
-      dataFile.getBuses(this.scenarioId).forEach(bus -> System.out.println(Utilities.toString(bus)));
+      System.out.println("id, num, name, voltage, area, trlim, (lat, lon)");
+      dataFile.getBuses(this.scenarioId, this.orderBy).forEach(bus -> System.out.println(Utilities.toString(bus)));
     }
 
     return 0;

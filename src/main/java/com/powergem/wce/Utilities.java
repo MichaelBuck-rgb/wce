@@ -76,8 +76,8 @@ public final class Utilities {
     map.put("id", String.valueOf(flowgate.id()));
     map.put("dfax", String.valueOf(flowgate.dfax()));
     map.put("trlim", String.valueOf(flowgate.trlim()));
-    map.put("mon", "'" + flowgate.mon().trim() + "'");
-    map.put("con", "'" + flowgate.con().trim() + "'");
+    map.put("mon", "'" + flowgate.mon() + "'");
+    map.put("con", "'" + flowgate.con() + "'");
     map.put("rating", String.format("%.2f", flowgate.rating()));
     map.put("%load", percentLoad);
 
@@ -138,16 +138,14 @@ public final class Utilities {
   }
 
   public static String toString(BusEntity bus) {
-    Map<String, String> map = new LinkedHashMap<>();
-
-    map.put("id", String.valueOf(bus.id()));
-    map.put("busnum", String.valueOf(bus.busnum()));
-    map.put("busname", "'" + bus.busname() + "'");
-    map.put("busvolt", String.format("%.2f", bus.busvolt()));
-    map.put("busarea", "'" + bus.busarea() + "'");
-    map.put("trlim", String.valueOf(bus.trlim()));
-    map.put("location", toString(bus.lat(), bus.lon()));
-
-    return toString(map);
+    return String.join(", ", List.of(
+            String.valueOf(bus.id()),
+            String.valueOf(bus.busnum()),
+            "\"" + bus.busname() + "\"",
+            String.format("%.2f", bus.busvolt()),
+            "\"" + bus.busarea() + "\"",
+            String.valueOf(bus.trlim()),
+            toString(bus.lat(), bus.lon())
+    ));
   }
 }

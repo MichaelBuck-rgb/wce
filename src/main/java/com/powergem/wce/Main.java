@@ -21,7 +21,10 @@ public class Main {
 
   @SuppressWarnings("InstantiationOfUtilityClass")
   public static void main(String[] args) {
-    int exitCode = new CommandLine(new Main()).execute(args);
+    int exitCode = new CommandLine(new Main())
+            .setCaseInsensitiveEnumValuesAllowed(true)
+            .setUsageHelpAutoWidth(true)
+            .execute(args);
     System.exit(exitCode);
   }
 
