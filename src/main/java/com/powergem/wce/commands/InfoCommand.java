@@ -9,8 +9,8 @@ import java.util.concurrent.Callable;
 
 @CommandLine.Command(name = "info")
 public final class InfoCommand implements Callable<Integer> {
-  @CommandLine.Parameters(index = "0", description = "The JSON file to inspect.")
-  private Path jsonFile;
+  @CommandLine.Option(names = {"-i", "--input"}, description = "The JSON file to inspect.", defaultValue = "WClusterTrLimSumJson.json")
+  private Path jsonFile = Path.of("WClusterTrLimSumJson.json");
 
   @Override
   public Integer call() {
@@ -18,13 +18,16 @@ public final class InfoCommand implements Callable<Integer> {
 
     WorstCaseTrLim worstCaseTrLim = Utilities.getWorstCaseTrLim(this.jsonFile);
     worstCaseTrLim.wcResults().forEach(wcResult -> {
-      System.out.printf("  Title                        : `%s'%n", wcResult.title());
-      System.out.printf("  Version                      : `%s`%n", wcResult.version());
-      System.out.printf("  ID                           : `%s`%n", wcResult.id());
-      System.out.printf("  Number of buses              : %d%n", wcResult.buses().size());
-      System.out.printf("  Number of `stressgens`       : %d%n", wcResult.StressGens().size());
-      System.out.printf("  Number of `flowgates`        : %d%n", wcResult.flowgates().size());
-      System.out.printf("  Number of `branch terminals` : %d%n", wcResult.branchTerminalList().size());
+      System.out.printf("  Title                   : `%s'%n", wcResult.title());
+      System.out.printf("  Version                 : `%s`%n", wcResult.version());
+      System.out.printf("  ID                      : `%s`%n", wcResult.id());
+      System.out.printf("  Type                    : `%s`%n", wcResult.type());
+      System.out.printf("  Buses                   : %d%n", wcResult.buses().size());
+      System.out.printf("  stressgens              : %d%n", wcResult.StressGens().size());
+      System.out.printf("  flowgates               : %d%n", wcResult.flowgates().size());
+      System.out.printf("  branch terminals        : %d%n", wcResult.branchTerminalList().size());
+      System.out.printf("  line cost data          : %d%n", wcResult.lineCostData().size());
+      System.out.printf("  transformer cost data   : %d%n", wcResult.transformerCostData().size());
       System.out.println();
     });
 
