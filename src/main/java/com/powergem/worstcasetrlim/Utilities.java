@@ -1,11 +1,9 @@
 package com.powergem.worstcasetrlim;
 
-import com.fasterxml.jackson.annotation.JsonSetter;
-import com.fasterxml.jackson.annotation.Nulls;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.ObjectReader;
 import com.powergem.worstcasetrlim.model.WcResult;
 import com.powergem.worstcasetrlim.model.WorstCaseTrLim;
+import io.avaje.jsonb.JsonType;
+import io.avaje.jsonb.Jsonb;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -20,15 +18,12 @@ public final class Utilities {
   }
 
   public static WorstCaseTrLim getWorstCaseTrLim(Path file) {
-    ObjectMapper objectMapper = new ObjectMapper();
-    objectMapper.setDefaultSetterInfo(JsonSetter.Value.forValueNulls(Nulls.AS_EMPTY));
-
-    ObjectReader objectReader = objectMapper.readerFor(WorstCaseTrLim.class);
+    Jsonb jsonb = Jsonb.builder().build();
+    JsonType<WorstCaseTrLim> customerType = jsonb.type(WorstCaseTrLim.class);
 
     WorstCaseTrLim worstCaseTrLim;
-
     try (InputStream inputStream = Files.newInputStream(file)) {
-      worstCaseTrLim = objectReader.readValue(inputStream);
+      worstCaseTrLim = customerType.fromJson(inputStream);
     } catch (IOException e) {
       throw new UncheckedIOException(e);
     }

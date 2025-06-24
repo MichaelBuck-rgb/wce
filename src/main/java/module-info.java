@@ -1,5 +1,4 @@
 module com.powergem.wce.main {
-  requires com.fasterxml.jackson.databind;
   requires info.picocli;
   requires java.sql;
   requires java.desktop;
@@ -7,6 +6,8 @@ module com.powergem.wce.main {
 
   opens com.powergem.wce.commands to info.picocli;
 
-  exports com.powergem.worstcasetrlim.model to com.fasterxml.jackson.databind;
-  exports com.powergem.worstcasetrlim.normalized.model to com.fasterxml.jackson.databind;
+  requires io.avaje.jsonb;
+
+  // you must define the fully qualified class name of the generated classes. if you use an import statement, compilation will fail
+  provides io.avaje.jsonb.spi.JsonbExtension with com.powergem.worstcasetrlim.model.jsonb.GeneratedJsonComponent;
 }
