@@ -3,6 +3,7 @@ package com.powergem.wce.commands;
 import com.powergem.sql.UncheckedConnection;
 import com.powergem.wce.DataFile;
 import com.powergem.wce.Importer;
+import com.powergem.wce.ReportType;
 import com.powergem.wce.Utilities;
 import com.powergem.wce.entities.BusEntity;
 import picocli.CommandLine;
@@ -29,9 +30,14 @@ public final class ListBusCommand implements Callable<Integer> {
   @CommandLine.Option(names = {"-na", "--no-ansi"}, description = "Do not use ANSI codes in the output")
   private boolean noAnsi = false;
 
+  @CommandLine.Option(names = {"-X", "--exclude"}, description = "Objects to exclude from the list.")
+  private String exclude = "";
+
   @Override
   public Integer call() throws Exception {
     System.setProperty("wce.useAnsi", String.valueOf(!noAnsi));
+
+    Set<ReportType> exclusions = Utilities.toExclusions(this.exclude);
 
     String jdbcUrl = "jdbc:sqlite::memory:";
 
@@ -43,7 +49,7 @@ public final class ListBusCommand implements Callable<Integer> {
       if (optionalBus.isPresent()) {
         optionalBus.ifPresent(bus -> {
           System.out.println("[bus] [" + Utilities.toString(bus) + "]");
-          dataFile.getFlowgates(scenarioId, busNumber).forEach(flowgate -> dumpFlowgate(flowgate, dataFile, scenarioId, 2));
+          dataFile.getFlowgates(scenarioId, busNumber).forEach(flowgate -> dumpFlowgate(flowgate, dataFile, scenarioId, 2, exclusions));
         });
       } else {
         System.out.println("Bus not found.");

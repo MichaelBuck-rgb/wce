@@ -54,7 +54,7 @@ graalvmNative {
         named("main") {
             imageName.set("wce")
             quickBuild.set(true)
-            buildArgs.add("-R:MaxHeapSize=256M")
+            buildArgs.add("-R:MaxHeapSize=512M")
             buildArgs.add("--enable-native-access=ALL-UNNAMED")
         }
         binaries.all {

@@ -4,9 +4,7 @@ import com.powergem.MonType;
 import com.powergem.wce.entities.*;
 import com.powergem.worstcasetrlim.model.BranchTerminal;
 
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public final class Utilities {
@@ -14,21 +12,23 @@ public final class Utilities {
   private Utilities() {
   }
 
-  public static void dumpFlowgate(FlowgateEntity flowgate, DataFile dataFile, int scenarioId, int indent) {
+  public static void dumpFlowgate(FlowgateEntity flowgate, DataFile dataFile, int scenarioId, int indent, Set<ReportType> exclusions) {
     String strIndent = " ".repeat(indent);
 
     System.out.printf("%n%s[Flowgate] [%s]%n", strIndent, toString(flowgate));
     List<ConstraintsEntity> constraints = dataFile.getConstraints(scenarioId, flowgate.id());
     constraints.forEach(constraint -> MonType.getMonType(constraint.monType()).ifPresent(monType -> {
       if (monType == MonType.LINE) {
-        BranchTerminal from = dataFile.getBranchBus(scenarioId, constraint.frBus()).orElseThrow();
-        BranchTerminal to = dataFile.getBranchBus(scenarioId, constraint.toBus()).orElseThrow();
-        System.out.printf("%n%s  [Line Constraint]%n", strIndent);
-        System.out.printf("%s    [From] [%s]%n", strIndent, toString(from));
-        System.out.printf("%s      [To] [%s]%n", strIndent, toString(to));
+        if (!exclusions.contains(ReportType.LINE_CONSTRAINTS)) {
+          BranchTerminal from = dataFile.getBranchBus(scenarioId, constraint.frBus()).orElseThrow();
+          BranchTerminal to = dataFile.getBranchBus(scenarioId, constraint.toBus()).orElseThrow();
+          System.out.printf("%n%s  [Line Constraint]%n", strIndent);
+          System.out.printf("%s    [From] [%s]%n", strIndent, toString(from));
+          System.out.printf("%s      [To] [%s]%n", strIndent, toString(to));
 
-        LineCostDatumEntity lineCostDatum = dataFile.getLineCostDatumById(flowgate.equipment_index(), scenarioId).orElseThrow();
-        System.out.printf("%s    [Cost] [%s]%n", strIndent, toString(lineCostDatum));
+          LineCostDatumEntity lineCostDatum = dataFile.getLineCostDatumById(flowgate.equipment_index(), scenarioId).orElseThrow();
+          System.out.printf("%s    [Cost] [%s]%n", strIndent, toString(lineCostDatum));
+        }
       } else if (monType == MonType.TRANSFORMER) {
         BranchTerminal from = dataFile.getBranchBus(scenarioId, constraint.frBus()).orElseThrow();
         System.out.printf("%s  [Transformer Constraint]%n", strIndent);
@@ -38,8 +38,10 @@ public final class Utilities {
       }
     }));
 
-    System.out.printf("%n%s  [Harmers]%n", strIndent);
-    dataFile.getHarmers(scenarioId, flowgate.id()).forEach(harmer -> System.out.printf("%s    %s]%n", strIndent, toString(harmer)));
+    if (!exclusions.contains(ReportType.HARMERS)) {
+      System.out.printf("%n%s  [Harmers]%n", strIndent);
+      dataFile.getHarmers(scenarioId, flowgate.id()).forEach(harmer -> System.out.printf("%s    %s]%n", strIndent, toString(harmer)));
+    }
   }
 
   private static String toString(LineCostDatumEntity lineCostDatum) {
@@ -147,5 +149,21 @@ public final class Utilities {
             String.valueOf(bus.trlim()),
             toString(bus.lat(), bus.lon())
     ));
+  }
+
+  public static Set<ReportType> toExclusions(String exclude) {
+    return Arrays.stream(exclude.split(","))
+            .map(String::trim)
+            .map(String::toLowerCase)
+            .map(Utilities::getReportType)
+            .collect(Collectors.toSet());
+  }
+
+  private static ReportType getReportType(String s) {
+    return switch (s.toLowerCase()) {
+      case "harmers" -> ReportType.HARMERS;
+      case "lineconstraints" -> ReportType.LINE_CONSTRAINTS;
+      default -> throw new IllegalArgumentException("Unknown report type: " + s);
+    };
   }
 }
