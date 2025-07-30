@@ -25,9 +25,9 @@ public final class InfoCommand implements Callable<Integer> {
       System.out.printf("  Buses                   : %d%n", wcResult.buses().size());
       System.out.printf("  stressgens              : %d%n", wcResult.StressGens().size());
       System.out.printf("  flowgates               : %d%n", wcResult.flowgates().size());
-      System.out.printf("  branch terminals        : %d%n", wcResult.branchTerminalList().size());
-      System.out.printf("  line cost data          : %d%n", wcResult.lineCostData().size());
-      System.out.printf("  transformer cost data   : %d%n", wcResult.transformerCostData().size());
+      System.out.printf("  branch terminals        : %d%n", wcResult.branchTerminalList() == null ? null : wcResult.branchTerminalList().size());
+      System.out.printf("  line cost data          : %d%n", wcResult.lineCostData() == null ? null : wcResult.lineCostData().size());
+      System.out.printf("  transformer cost data   : %d%n", wcResult.transformerCostData() == null ? null : wcResult.transformerCostData().size());
       System.out.println();
     });
 
