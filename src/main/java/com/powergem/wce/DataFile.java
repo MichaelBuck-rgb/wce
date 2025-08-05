@@ -19,6 +19,33 @@ public final class DataFile {
     this.connection = connection;
   }
 
+  public List<ScenarioEntity> getScenarios() {
+    try (UncheckedPreparedStatement statement = connection.prepareStatement("select * from scenarios")) {
+      try (UncheckedResultSet resultSet = statement.executeQuery()) {
+        List<ScenarioEntity> scenarios = new ArrayList<>();
+        while (resultSet.next()) {
+          scenarios.add(toScenario(resultSet));
+        }
+        return scenarios;
+      }
+    } catch (RuntimeException e) {
+      throw e;
+    } catch (SQLException e) {
+      throw new UncheckedSQLException(e);
+    } catch (Exception e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  private ScenarioEntity toScenario(UncheckedResultSet resultSet) {
+    return new ScenarioEntity(
+            resultSet.getString("id").orElseThrow(),
+            resultSet.getString("name").orElseThrow(),
+            resultSet.getString("version").orElseThrow(),
+            resultSet.getString("mode").orElseThrow()
+    );
+  }
+
   public Optional<BusEntity> getBus(int busNum, int scenarioId) {
     try (UncheckedPreparedStatement statement = connection.prepareStatement("select * from buses where scenarioId = ? and busnum = ?")) {
       statement.setInt(1, scenarioId);

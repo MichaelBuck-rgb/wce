@@ -87,6 +87,9 @@ public final class Importer {
   }
 
   private static void createLineCostDataTable(List<LineCostData> lineCostData, int scenarioId, Connection connection) throws SQLException {
+    if (lineCostData == null || lineCostData.isEmpty()) {
+      return;
+    }
     try (PreparedStatement statement = connection.prepareStatement("INSERT INTO line_cost_data VALUES(?, ?, ?, ?, ?, ?, ?)")) {
       lineCostData.forEach(lineCostDatum -> {
         try {
@@ -137,15 +140,17 @@ public final class Importer {
         int[] frBus = flowgate.frBuses();
         int[] toBus = flowgate.toBuses();
 
-        for (int i = 0; i < monTypes.length; ++i) {
-          statement.setInt(1, scenarioId);
-          statement.setInt(2, flowgate.id());
-          statement.setInt(3, monTypes[i]);
-          statement.setInt(4, frBus[i]);
-          statement.setInt(5, toBus[i]);
-          statement.addBatch();
+        if (monTypes != null) {
+          for (int i = 0; i < monTypes.length; ++i) {
+            statement.setInt(1, scenarioId);
+            statement.setInt(2, flowgate.id());
+            statement.setInt(3, monTypes[i]);
+            statement.setInt(4, frBus[i]);
+            statement.setInt(5, toBus[i]);
+            statement.addBatch();
+          }
+          statement.executeBatch();
         }
-        statement.executeBatch();
       }
     }
   }
@@ -156,6 +161,10 @@ public final class Importer {
   }
 
   private static WcResult decrypt(WcResult wcResult) {
+    List<BranchTerminal> branchTerminals = wcResult.branchTerminalList();
+    if (branchTerminals == null) {
+      branchTerminals = List.of();
+    }
     return new WcResult(
             wcResult.version(),
             wcResult.id(),
@@ -163,7 +172,7 @@ public final class Importer {
             decryptBuses(wcResult.buses()),
             decryptStressGens(wcResult.StressGens()),
             wcResult.flowgates(),
-            decryptBranchTerminals(wcResult.branchTerminalList()),
+            decryptBranchTerminals(branchTerminals),
             wcResult.type(),
             wcResult.lineCostData(),
             wcResult.transformerCostData()
@@ -242,7 +251,7 @@ public final class Importer {
       for (Flowgate flowgate : flowgates) {
 
         int[] equipmentIndices = flowgate.equipmentIndex();
-        if (equipmentIndices.length > 0) {
+        if (equipmentIndices != null && equipmentIndices.length > 0) {
           for (int equipmentIndex : equipmentIndices) {
             int index = 1;
             statement.setInt(index++, scenarioId);
