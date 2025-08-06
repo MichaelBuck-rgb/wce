@@ -115,13 +115,13 @@ public final class UncheckedResultSet implements AutoCloseable {
     }
   }
 
-  public OptionalInt getInt(String columnLabel) {
+  public Optional<Integer> getInt(String columnLabel) {
     try {
       int anInt = this.resultSet.getInt(columnLabel);
       if (this.resultSet.wasNull()) {
-        return OptionalInt.empty();
+        return Optional.empty();
       }
-      return OptionalInt.of(anInt);
+      return Optional.of(anInt);
     } catch (SQLException e) {
       throw new RuntimeException(e);
     }

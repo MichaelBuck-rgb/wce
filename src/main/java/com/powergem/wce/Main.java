@@ -1,15 +1,13 @@
 package com.powergem.wce;
 
-import com.powergem.wce.commands.InfoCommand;
-import com.powergem.wce.commands.SearchCommand;
-import com.powergem.wce.commands.SqliteCommand;
-import com.powergem.wce.commands.ListCommand;
+import com.powergem.wce.commands.*;
 import picocli.CommandLine;
 
 @CommandLine.Command(
         name = "wce",
         description = "A utility to inspect a WClusterTrLimSumJson.json file",
         subcommands = {
+                ExtractCommand.class,
                 SqliteCommand.class,
                 ListCommand.class,
                 InfoCommand.class,

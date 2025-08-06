@@ -26,7 +26,7 @@ public final class Utilities {
           System.out.printf("%s    [From] [%s]%n", strIndent, toString(from));
           System.out.printf("%s      [To] [%s]%n", strIndent, toString(to));
 
-          LineCostDatumEntity lineCostDatum = dataFile.getLineCostDatumById(flowgate.equipment_index(), scenarioId).orElseThrow();
+          LineCostDatumEntity lineCostDatum = dataFile.getLineCostDatumById(flowgate.equipment_index().orElseThrow(), scenarioId).orElseThrow();
           System.out.printf("%s    [Cost] [%s]%n", strIndent, toString(lineCostDatum));
         }
       } else if (monType == MonType.TRANSFORMER) {
