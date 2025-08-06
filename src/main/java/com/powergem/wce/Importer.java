@@ -180,15 +180,15 @@ public final class Importer {
   }
 
   private static List<BranchTerminal> decryptBranchTerminals(List<BranchTerminal> branchTerminals) {
-    return branchTerminals.stream().map(bt -> new BranchTerminal(bt.id(), bt.name(), bt.kv(), bt.areanum(), bt.areaname(), decryptLat(bt.lat(), bt.lon()), decryptLon(bt.lat(), bt.lon()))).toList();
+    return branchTerminals.stream().map(bt -> new BranchTerminal(bt.id(), bt.name(), bt.kv(), bt.areanum(), bt.areaname(), com.powergem.wce.Utilities.decryptLat(bt.lat(), bt.lon()), com.powergem.wce.Utilities.decryptLon(bt.lat(), bt.lon()))).toList();
   }
 
   private static List<StressGen> decryptStressGens(List<StressGen> stressGens) {
-    return stressGens.stream().map(stressGen -> new StressGen(stressGen.id(), stressGen.busnum(), stressGen.busname(), stressGen.busvolt(), stressGen.busarea(), decryptLat(stressGen.lat(), stressGen.lon()), decryptLon(stressGen.lat(), stressGen.lon()))).toList();
+    return stressGens.stream().map(stressGen -> new StressGen(stressGen.id(), stressGen.busnum(), stressGen.busname(), stressGen.busvolt(), stressGen.busarea(), com.powergem.wce.Utilities.decryptLat(stressGen.lat(), stressGen.lon()), com.powergem.wce.Utilities.decryptLon(stressGen.lat(), stressGen.lon()))).toList();
   }
 
   private static List<Bus> decryptBuses(List<Bus> buses) {
-    return buses.stream().map(bus -> new Bus(bus.id(), bus.busnum(), bus.busname(), bus.busvolt(), bus.busarea(), bus.trlim(), decryptLat(bus.lat(), bus.lon()), decryptLon(bus.lat(), bus.lon()))).toList();
+    return buses.stream().map(bus -> new Bus(bus.id(), bus.busnum(), bus.busname(), bus.busvolt(), bus.busarea(), bus.trlim(), com.powergem.wce.Utilities.decryptLat(bus.lat(), bus.lon()), com.powergem.wce.Utilities.decryptLon(bus.lat(), bus.lon()))).toList();
   }
 
   private static void createBusTable(Collection<Bus> buses, int scenarioId, Connection connection) throws SQLException {
@@ -308,15 +308,4 @@ public final class Importer {
     }
   }
 
-  private static double decryptLat(double encryptedLat, double encryptedLon) {
-    return (Math.signum(encryptedLon) * decrypt(encryptedLon) - Math.signum(encryptedLat) * decrypt(encryptedLat)) / 2;
-  }
-
-  private static double decryptLon(double encryptedLat, double encryptedLon) {
-    return (Math.signum(encryptedLon) * decrypt(encryptedLon) + Math.signum(encryptedLat) * decrypt(encryptedLat)) / 2;
-  }
-
-  private static double decrypt(double encrypted) {
-    return Math.cbrt(Math.abs(encrypted));
-  }
 }

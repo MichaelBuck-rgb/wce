@@ -11,6 +11,8 @@ import java.sql.SQLException;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static com.powergem.wce.Utilities.encryptLat;
+import static com.powergem.wce.Utilities.encryptLon;
 import static java.util.stream.Collectors.groupingBy;
 
 public final class DataFile {
@@ -333,7 +335,13 @@ public final class DataFile {
     List<WcResult> wcResults = busesGroupedByScenario.entrySet().stream()
             .map(entry -> {
               ScenarioEntity scenarioEntity = scenarioGroups.get(entry.getKey()).getFirst();
-              List<Bus> buses = entry.getValue().stream().map(bus -> new Bus(bus.id(), bus.busnum(), bus.busname(), bus.busvolt(), bus.busarea(), bus.trlim(), bus.lat(), bus.lon())).toList();
+              List<Bus> buses = entry.getValue().stream().map(bus -> {
+                double lon = bus.lon();
+                double lat = bus.lat();
+                double encryptedLat = encryptLat(lat, lon);
+                double encryptedLon = encryptLon(lat, lon);
+                return new Bus(bus.id(), bus.busnum(), bus.busname(), bus.busvolt(), bus.busarea(), bus.trlim(), encryptedLat, encryptedLon);
+              }).toList();
               return Map.entry(scenarioEntity, buses);
             })
             .map(entry -> {

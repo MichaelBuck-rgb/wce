@@ -178,4 +178,24 @@ public final class Utilities {
       default -> throw new IllegalArgumentException("Unknown report type: " + s);
     };
   }
+
+  static double encryptLat(double lat, double lon) {
+    return Math.pow(lon - lat, 3);
+  }
+
+  static double encryptLon(double lat, double lon) {
+    return Math.pow(lon + lat, 3);
+  }
+
+  static double decryptLat(double encryptedLat, double encryptedLon) {
+    return (Math.signum(encryptedLon) * decrypt(encryptedLon) - Math.signum(encryptedLat) * decrypt(encryptedLat)) / 2;
+  }
+
+  static double decryptLon(double encryptedLat, double encryptedLon) {
+    return (Math.signum(encryptedLon) * decrypt(encryptedLon) + Math.signum(encryptedLat) * decrypt(encryptedLat)) / 2;
+  }
+
+  private static double decrypt(double encrypted) {
+    return Math.cbrt(Math.abs(encrypted));
+  }
 }
