@@ -30,4 +30,12 @@ public final class UncheckedPreparedStatement implements AutoCloseable{
       throw new RuntimeException(e);
     }
   }
+
+  public void setString(int parameterIndex, String x) {
+    try {
+      this.statement.setString(parameterIndex, x);
+    } catch (SQLException e) {
+      throw new RuntimeException(e);
+    }
+  }
 }

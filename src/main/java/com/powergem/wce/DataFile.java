@@ -1,14 +1,13 @@
 package com.powergem.wce;
 
-import com.powergem.sql.UncheckedConnection;
-import com.powergem.sql.UncheckedPreparedStatement;
-import com.powergem.sql.UncheckedResultSet;
-import com.powergem.sql.UncheckedSQLException;
+import com.powergem.TableBuilder;
+import com.powergem.sql.*;
 import com.powergem.wce.entities.*;
 import com.powergem.worstcasetrlim.model.BranchTerminal;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -39,7 +38,7 @@ public final class DataFile {
 
   private ScenarioEntity toScenario(UncheckedResultSet resultSet) {
     return new ScenarioEntity(
-            resultSet.getString("id").orElseThrow(),
+            Integer.parseInt(resultSet.getString("id").orElseThrow()),
             resultSet.getString("name").orElseThrow(),
             resultSet.getString("version").orElseThrow(),
             resultSet.getString("mode").orElseThrow()
@@ -269,6 +268,54 @@ public final class DataFile {
             resultSet.getFloat("upgrade_cost").orElseThrow(),
             resultSet.getFloat("new_line_cost").orElseThrow()
     );
+  }
+
+
+  public void search(String search, UncheckedConnection connection) {
+    record Tuple(ScenarioEntity scenarioEntity, Collection<BusEntity> buses) {
+    }
+
+    TableBuilder tableBuilder = new TableBuilder(Utilities.busHeader());
+    getScenarios().stream()
+            .map(scenarioEntity -> new Tuple(scenarioEntity, searchForBuses(search, scenarioEntity.id(), connection)))
+            .forEach(tuple -> tuple.buses.forEach(busEntity -> tableBuilder.addRow(
+                    tuple.scenarioEntity.name(),
+                    String.valueOf(busEntity.id()),
+                    String.valueOf(busEntity.busnum()),
+                    busEntity.busname(),
+                    String.valueOf(busEntity.busvolt()),
+                    busEntity.busarea(),
+                    String.format("%.2f", busEntity.trlim()),
+                    String.format("(%.6f, %.6f)", busEntity.lat(), busEntity.lon())
+            )));
+
+    System.out.printf("Found '%s' in the following buses:%n", search);
+    tableBuilder.printTable();
+  }
+
+  public Collection<BusEntity> searchForBuses(String search, int scenarioId, UncheckedConnection connection) {
+    Collection<BusEntity> buses = new ArrayList<>();
+
+    String escapedSearch = search.replace("!", "!!")
+            .replace("%", "!%")
+            .replace("_", "!_")
+            .replace("[", "![");
+    try (UncheckedPreparedStatement statement = connection.prepareStatement("SELECT * FROM buses WHERE scenarioId = ? AND (UPPER(busname) LIKE ? ESCAPE '!' OR UPPER(busarea) LIKE ? ESCAPE '!')")) {
+      statement.setInt(1, scenarioId);
+      statement.setString(2, "%" + escapedSearch + "%");
+      statement.setString(3, "%" + escapedSearch + "%");
+
+      try (UncheckedResultSet resultSet = statement.executeQuery()) {
+        while (resultSet.next()) {
+          BusEntity bus = toBus(resultSet);
+          buses.add(bus);
+        }
+      }
+    } catch (Exception e) {
+      throw new RuntimeException(e);
+    }
+
+    return buses;
   }
 
   public enum BusOrderBy {

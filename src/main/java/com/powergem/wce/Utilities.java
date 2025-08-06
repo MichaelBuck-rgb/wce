@@ -139,6 +139,18 @@ public final class Utilities {
             .collect(Collectors.joining(", "));
   }
 
+  public static String[] busHeader() {
+    return new String[]{
+            "Scenario",
+            "id",
+            "busnum",
+            "busname",
+            "busvolt",
+            "busarea",
+            "trlim",
+            "location"};
+  }
+
   public static String toString(BusEntity bus) {
     return String.join(", ", List.of(
             String.valueOf(bus.id()),

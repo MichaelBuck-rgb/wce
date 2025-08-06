@@ -1,4 +1,4 @@
 package com.powergem.wce.entities;
 
-public record ScenarioEntity(String id, String name, String version, String mode) {
+public record ScenarioEntity(int id, String name, String version, String mode) {
 }

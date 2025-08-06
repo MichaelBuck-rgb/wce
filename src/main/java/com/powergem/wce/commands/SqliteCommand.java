@@ -3,13 +3,8 @@ package com.powergem.wce.commands;
 import com.powergem.wce.Importer;
 import picocli.CommandLine;
 
-import java.io.IOException;
-import java.io.UncheckedIOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.sql.Connection;
-import java.sql.SQLException;
 import java.util.concurrent.Callable;
 
 import static com.powergem.wce.Utils.getConnection;
@@ -20,28 +15,23 @@ import static com.powergem.wce.Utils.getConnection;
         usageHelpWidth = 132
 )
 public class SqliteCommand implements Callable<Integer> {
+  @CommandLine.Option(names = {"-i", "--input"}, description = "The JSON file to inspect.", defaultValue = "WClusterTrLimSumJson.json")
+  private Path jsonFile = Path.of("WClusterTrLimSumJson.json");
 
-  @CommandLine.Parameters(index = "0", description = "The WClusterTrLimSumJson.json to import")
-  private Path file;
+//  @CommandLine.Option(names = {"-s", "--scenario"}, description = "The ID of the scenario to get the bus from.", defaultValue = "1")
+//  private int scenarioId = 1;
+
+  @CommandLine.Option(names = {"-n", "--no-ansi"}, description = "Do not use ANSI codes in the output")
+  private boolean noAnsi = false;
 
   @Override
-  public Integer call() {
-    if (Files.notExists(this.file)) {
-      System.err.println("File '" + this.file + "' does not exist.");
-      return 1;
-    }
+  public Integer call() throws Exception {
+    System.setProperty("wce.useAnsi", String.valueOf(!noAnsi));
 
-    try {
-      Files.deleteIfExists(Paths.get("worstcasetrlim.sqlite"));
-    } catch (IOException e) {
-      throw new UncheckedIOException(e);
-    }
+    String jdbcUrl = "jdbc:sqlite:WClusterTrLimSumJson.sqlite";
 
-    try (Connection connection = getConnection("jdbc:sqlite:worstcasetrlim.sqlite")) {
-      Importer.importData(this.file, connection);
-    } catch (SQLException e) {
-      e.printStackTrace(System.err);
-      return 1;
+    try (Connection connection = getConnection(jdbcUrl)) {
+      Importer.importData(this.jsonFile, connection);
     }
 
     return 0;
