@@ -3,7 +3,9 @@ package com.powergem.wce.commands;
 import com.powergem.wce.Importer;
 import picocli.CommandLine;
 
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.sql.Connection;
 import java.util.concurrent.Callable;
 
@@ -21,6 +23,9 @@ public class SqliteCommand implements Callable<Integer> {
 //  @CommandLine.Option(names = {"-s", "--scenario"}, description = "The ID of the scenario to get the bus from.", defaultValue = "1")
 //  private int scenarioId = 1;
 
+  @CommandLine.Option(names = {"-f", "--force"}, description = "Overwrite existing file.")
+  private boolean force = false;
+
   @CommandLine.Option(names = {"-n", "--no-ansi"}, description = "Do not use ANSI codes in the output")
   private boolean noAnsi = false;
 
@@ -28,11 +33,29 @@ public class SqliteCommand implements Callable<Integer> {
   public Integer call() throws Exception {
     System.setProperty("wce.useAnsi", String.valueOf(!noAnsi));
 
-    String jdbcUrl = "jdbc:sqlite:WClusterTrLimSumJson.sqlite";
+    this.jsonFile = this.jsonFile.normalize().toAbsolutePath();
+
+    Path parentDir = this.jsonFile.getParent();
+    String baseName = this.jsonFile.getFileName().toString();
+    int indexOf = baseName.lastIndexOf('.');
+    Path sqliteFile = parentDir.resolve(baseName.substring(0, indexOf) + ".db");
+
+    if (!this.force && Files.exists(sqliteFile)) {
+      System.err.println("File " + sqliteFile + " already exists.  Add --force to overwrite.");
+      return 1;
+    }
+
+    Path tempFile = Files.createTempFile(baseName, null);
+
+    System.out.println("Converting " + this.jsonFile + " to " + sqliteFile);
+
+    String jdbcUrl = "jdbc:sqlite:" + tempFile;
 
     try (Connection connection = getConnection(jdbcUrl)) {
       Importer.importData(this.jsonFile, connection);
     }
+
+    Files.copy(tempFile, sqliteFile, StandardCopyOption.REPLACE_EXISTING);
 
     return 0;
   }
