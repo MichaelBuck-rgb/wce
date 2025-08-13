@@ -29,7 +29,8 @@ public final class Importer {
   private static final String CONSTRAINTS_INSERT_STATEMENT_TEMPLATE = "INSERT INTO constraints VALUES(?, ?, ?, ?, ?)";
 
   private static final String LINE_COST_DATA_CREATE_TABLE = "CREATE TABLE line_cost_data (scenarioId INTEGER, id INTEGER, length REAL, max_rating_per_line REAL, max_allowed_flow_per_line REAL, upgrade_cost REAL, new_line_cost REAL)";
-//  private static final String CONSTRAINTS_INSERT_STATEMENT_TEMPLATE = "INSERT INTO constraints VALUES(?, ?, ?, ?, ?)";
+
+  private static final String TRANSFORMER_COST_DATA_CREATE_TABLE = "CREATE TABLE transformer_cost_data (scenarioId INTEGER, id INTEGER, perMWCost REAL, fixedCost REAL)";
 
   private Importer() {
   }
@@ -56,6 +57,7 @@ public final class Importer {
         statement.execute(HARMERS_CREATE_TABLE);
         statement.execute(CONSTRAINTS_CREATE_TABLE);
         statement.execute(LINE_COST_DATA_CREATE_TABLE);
+        statement.execute(TRANSFORMER_COST_DATA_CREATE_TABLE);
       }
 
       for (WcResult wcResult : worstCaseTrLim.wcResults()) {
@@ -67,6 +69,7 @@ public final class Importer {
         createHarmersTable(wcResult.flowgates(), id, connection);
         createConstraintsTable(wcResult.flowgates(), id, connection);
         createLineCostDataTable(wcResult.lineCostData(), id, connection);
+        createTransformerCostTable(wcResult.transformerCostData(), id, connection);
       }
 
       // create indices
@@ -79,6 +82,7 @@ public final class Importer {
         statement.execute("CREATE INDEX harmers_idx ON harmers (scenarioId, id, flowgateId)");
         statement.execute("CREATE INDEX constraints_idx ON constraints (scenarioId, flowgateId)");
         statement.execute("CREATE INDEX line_cost_data_idx ON line_cost_data (scenarioId, id)");
+        statement.execute("CREATE INDEX transformer_cost_data_idx ON transformer_cost_data (scenarioId, id)");
       }
 
     } catch (SQLException e) {
@@ -100,6 +104,26 @@ public final class Importer {
           statement.setFloat(5, lineCostDatum.maxAllowedFlowPerLine());
           statement.setFloat(6, lineCostDatum.upgradeCost());
           statement.setFloat(7, lineCostDatum.newLineCost());
+          statement.addBatch();
+        } catch (SQLException e) {
+          throw new UncheckedSQLException(e);
+        }
+      });
+      statement.executeBatch();
+    }
+  }
+
+  private static void createTransformerCostTable(List<TransformerCostData> transformerCostData, int scenarioId, Connection connection) throws SQLException {
+    if (transformerCostData == null || transformerCostData.isEmpty()) {
+      return;
+    }
+    try (PreparedStatement statement = connection.prepareStatement("INSERT INTO transformer_cost_data VALUES(?, ?, ?, ?)")) {
+      transformerCostData.forEach(lineCostDatum -> {
+        try {
+          statement.setInt(1, scenarioId);
+          statement.setInt(2, lineCostDatum.id());
+          statement.setFloat(3, lineCostDatum.perMWCost());
+          statement.setFloat(4, lineCostDatum.fixedCost());
           statement.addBatch();
         } catch (SQLException e) {
           throw new UncheckedSQLException(e);
