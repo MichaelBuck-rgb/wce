@@ -115,7 +115,7 @@ public final class DataFile {
     return flowgates;
   }
 
-  private static FlowgateEntity getFlowgateEntity(UncheckedResultSet resultSet) {
+  public static FlowgateEntity getFlowgateEntity(UncheckedResultSet resultSet) {
     return new FlowgateEntity(
             resultSet.getInt("scenarioId").orElseThrow(),
             resultSet.getInt("id").orElseThrow(),
@@ -130,7 +130,7 @@ public final class DataFile {
     );
   }
 
-  private static BusEntity toBus(UncheckedResultSet resultSet) {
+  public static BusEntity toBus(UncheckedResultSet resultSet) {
     return new BusEntity(
             resultSet.getInt("scenarioId").orElseThrow(),
             resultSet.getInt("id").orElseThrow(),
@@ -144,7 +144,7 @@ public final class DataFile {
     );
   }
 
-  private HarmerEntity getHarmers(UncheckedResultSet resultSet) throws SQLException {
+  public static HarmerEntity getHarmers(UncheckedResultSet resultSet){
     return new HarmerEntity(
             resultSet.getInt("id").orElseThrow(),
             resultSet.getInt("flowgateId").orElseThrow(),
@@ -347,7 +347,7 @@ public final class DataFile {
             .map(entry -> {
               ScenarioEntity scenarioEntity = entry.getKey();
               List<Flowgate> flowgates = flowgatesGroupedByScenario.get(scenarioEntity.id()).stream()
-                      .map(flowgateEntity -> new Flowgate(flowgateEntity.id(), flowgateEntity.busId(), flowgateEntity.dfax(), flowgateEntity.trlim(), flowgateEntity.mon(), flowgateEntity.con(), flowgateEntity.rating(), flowgateEntity.loadingBefore(), flowgateEntity.loadingBefore(), 0, List.of(), null, null, null, null))
+                      .map(flowgateEntity -> new Flowgate(flowgateEntity.id(), flowgateEntity.busid(), flowgateEntity.dfax(), flowgateEntity.trlim(), flowgateEntity.mon(), flowgateEntity.con(), flowgateEntity.rating(), flowgateEntity.loadingbefore(), flowgateEntity.loadingbefore(), 0, List.of(), null, null, null, null))
                       .toList();
               return new WcResult(scenarioEntity.version(), String.valueOf(scenarioEntity.id()), scenarioEntity.name(), entry.getValue(), List.of(), flowgates, List.of(), scenarioEntity.mode(), List.of(), List.of());
             })

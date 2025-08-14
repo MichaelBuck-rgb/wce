@@ -38,4 +38,44 @@ public final class UncheckedPreparedStatement implements AutoCloseable{
       throw new RuntimeException(e);
     }
   }
+
+  public void setDouble(int parameterIndex, double x) {
+    try {
+      this.statement.setDouble(parameterIndex, x);
+    } catch (SQLException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  public int executeUpdate() {
+    try {
+      return this.statement.executeUpdate();
+    } catch (SQLException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  public void setNull(int parameterIndex, int sqlType) {
+    try {
+      this.statement.setNull(parameterIndex, sqlType);
+    } catch (SQLException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  public void addBatch() {
+    try {
+      this.statement.addBatch();
+    } catch (SQLException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  public void executeBatch() {
+    try {
+      this.statement.executeBatch();
+    } catch (SQLException e) {
+      throw new RuntimeException(e);
+    }
+  }
 }

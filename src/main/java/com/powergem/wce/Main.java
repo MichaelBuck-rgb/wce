@@ -11,7 +11,8 @@ import picocli.CommandLine;
                 SqliteCommand.class,
                 ListCommand.class,
                 InfoCommand.class,
-                SearchCommand.class
+                SearchCommand.class,
+                Fuzz.class
         },
         mixinStandardHelpOptions = true,
         version = "1.0.0",

@@ -16,7 +16,7 @@ import static com.powergem.wce.Utils.getConnection;
         description = "Converts the specified WClusterTrLimSumJson.json into constituent tables in a SQLite database.",
         usageHelpWidth = 132
 )
-public class SqliteCommand implements Callable<Integer> {
+public final class SqliteCommand implements Callable<Integer> {
   @CommandLine.Option(names = {"-i", "--input"}, description = "The JSON file to inspect.", defaultValue = "WClusterTrLimSumJson.json")
   private Path jsonFile = Path.of("WClusterTrLimSumJson.json");
 

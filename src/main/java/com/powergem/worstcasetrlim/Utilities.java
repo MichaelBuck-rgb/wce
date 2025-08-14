@@ -19,11 +19,11 @@ public final class Utilities {
 
   public static WorstCaseTrLim getWorstCaseTrLim(Path file) {
     Jsonb jsonb = Jsonb.builder().build();
-    JsonType<WorstCaseTrLim> customerType = jsonb.type(WorstCaseTrLim.class);
+    JsonType<WorstCaseTrLim> worstCaseTrLimJsonType = jsonb.type(WorstCaseTrLim.class);
 
     WorstCaseTrLim worstCaseTrLim;
     try (InputStream inputStream = Files.newInputStream(file)) {
-      worstCaseTrLim = customerType.fromJson(inputStream);
+      worstCaseTrLim = worstCaseTrLimJsonType.fromJson(inputStream);
     } catch (IOException e) {
       throw new UncheckedIOException(e);
     }

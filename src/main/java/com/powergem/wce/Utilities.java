@@ -69,8 +69,8 @@ public final class Utilities {
   }
 
   public static String toString(FlowgateEntity flowgate) {
-    String percentLoad = "%.2f".formatted(flowgate.loadingBefore());
-    if (flowgate.loadingBefore() >= 100) {
+    String percentLoad = "%.2f".formatted(flowgate.loadingbefore());
+    if (flowgate.loadingbefore() >= 100) {
       percentLoad = "\u001B[31m" + percentLoad + "\u001B[0m";
     }
 

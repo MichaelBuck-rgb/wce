@@ -6,6 +6,7 @@ import java.sql.SQLException;
 import java.util.Optional;
 import java.util.OptionalDouble;
 import java.util.OptionalInt;
+import java.util.OptionalLong;
 
 public final class UncheckedResultSet implements AutoCloseable {
   private final ResultSet resultSet;
@@ -63,9 +64,22 @@ public final class UncheckedResultSet implements AutoCloseable {
     }
   }
 
-  public long getLong(int columnIndex) {
+  public OptionalLong getLong(int columnIndex) {
     try {
-      return resultSet.getLong(columnIndex);
+      long aLong = resultSet.getLong(columnIndex);
+      if (resultSet.wasNull()) {
+        return OptionalLong.empty();
+      }
+      return OptionalLong.of(aLong);
+    } catch (SQLException e) {
+      throw new UncheckedSQLException(e);
+    }
+  }
+
+  public OptionalInt getInt(int columnIndex) {
+    try {
+      int anInt = resultSet.getInt(columnIndex);
+      return resultSet.wasNull() ? OptionalInt.empty() : OptionalInt.of(anInt);
     } catch (SQLException e) {
       throw new UncheckedSQLException(e);
     }

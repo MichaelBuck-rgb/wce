@@ -11,7 +11,7 @@ public final class UncheckedDriverManager {
   public static UncheckedConnection getConnection(String url) {
     try {
       UncheckedConnection uncheckedConnection = new UncheckedConnection(DriverManager.getConnection(url));
-      try (UncheckedStatement statement = uncheckedConnection.createStatement(1000)) {
+      try (UncheckedStatement statement = uncheckedConnection.createStatement()) {
 //        statement.execute("PRAGMA journal_mode = OFF");
         statement.execute("PRAGMA synchronous = 0");
         statement.execute("PRAGMA cache_size=1000000");

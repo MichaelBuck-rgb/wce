@@ -14,9 +14,11 @@ dependencies {
     implementation("io.avaje:avaje-jsonb:3.5")
     implementation("org.xerial:sqlite-jdbc:3.46.1.0")
     implementation("info.picocli:picocli:4.7.6")
+    implementation("org.mapstruct:mapstruct:1.6.3")
 
     annotationProcessor("info.picocli:picocli-codegen:4.7.6")
     annotationProcessor("io.avaje:avaje-jsonb-generator:3.5")
+    annotationProcessor("org.mapstruct:mapstruct-processor:1.6.3")
 
     runtimeOnly("org.slf4j:slf4j-simple:2.0.11")
 
