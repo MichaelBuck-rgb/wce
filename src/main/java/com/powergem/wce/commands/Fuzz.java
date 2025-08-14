@@ -51,6 +51,8 @@ public final class Fuzz implements Callable<Integer> {
     List<WcResult> wcResults = new ArrayList<>();
 
     try (Connection connection = getConnection(jdbcUrl)) {
+      connection.setAutoCommit(false);
+
       System.err.printf("[%tT] Loading %s...%n", LocalTime.now(), jsonFile);
       Importer.importData(this.jsonFile, connection);
       try (UncheckedConnection uncheckedConnection = new UncheckedConnection(connection)) {
@@ -70,14 +72,16 @@ public final class Fuzz implements Callable<Integer> {
                   float upgradeCost = (float) (Math.random() * 100);
                   float newLineCost = (float) (Math.random() * 100);
                   LineCostDatumEntity lineCostDatumEntry = new LineCostDatumEntity(scenarioTable.getScenarioId(), id, length, maxRatingPerLine, maxAllowedFlowPerLine, upgradeCost, newLineCost);
-                  lineCostDataTable.insert(lineCostDatumEntry);
+                  lineCostDataTable.insertBatch(lineCostDatumEntry);
                 }
+                lineCostDataTable.executeBatch();
+                connection.commit();
               }
 
               // update the flowgates to have at least one line-cost-data entry
               try (FlowgateTable.Updater updater = flowgateTable.updater(1000)) {
                 int lineCostDataId = 0;
-                for (FlowgateEntity flowgateEntity : flowgateTable) {
+                for (FlowgateEntity flowgateEntity : flowgateTable.toList()) {
                   flowgateEntity = flowgateEntity.withEquipmentIndex(lineCostDataId);
                   updater.accept(flowgateEntity);
                   lineCostDataId++;
@@ -111,11 +115,12 @@ public final class Fuzz implements Callable<Integer> {
     return 0;
   }
 
+
   private static WcResult toWcResult(ScenarioTable scenarioTable) {
     List<Bus> buses = scenarioTable.getBuses().toList().stream().map(BusMapper.INSTANCE::toBus).toList();
     List<StressGen> stressGens = scenarioTable.getStressgens().toList().stream().map(StressGenMapper.INSTANCE::toStressGen).toList();
     List<Tuple> flowgateTuples = new ArrayList<>();
-    scenarioTable.getFlowgates().forEach(flowgateEntity -> {
+    scenarioTable.getFlowgates().toList().forEach(flowgateEntity -> {
       List<HarmerEntity> harmerEntities = scenarioTable.getHarmers(flowgateEntity.id());
       ScenarioTable.ConstraintsInfo constraintInfo = scenarioTable.getConstraintInfoForFlowgate(flowgateEntity.id());
       int[] equipmentIndex = flowgateEntity.equipment_index().stream().mapToInt(Integer::intValue).toArray();

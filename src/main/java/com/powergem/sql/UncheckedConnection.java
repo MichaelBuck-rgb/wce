@@ -11,11 +11,6 @@ public final class UncheckedConnection implements AutoCloseable {
   private final Connection connection;
 
   public UncheckedConnection(Connection connection) {
-    try {
-      connection.setAutoCommit(false);
-    } catch (SQLException e) {
-      throw new RuntimeException(e);
-    }
     this.connection = connection;
   }
 
@@ -34,7 +29,7 @@ public final class UncheckedConnection implements AutoCloseable {
 
   public UncheckedPreparedStatement prepareStatement(String sql) {
     try {
-      return new UncheckedPreparedStatement(connection.prepareStatement(sql));
+      return new UncheckedPreparedStatement(this, connection.prepareStatement(sql));
     } catch (SQLException e) {
       throw new RuntimeException(e);
     }
@@ -66,5 +61,15 @@ public final class UncheckedConnection implements AutoCloseable {
       throw new RuntimeException(e);
     }
     return Optional.empty();
+  }
+
+  public void commit() {
+    try {
+      if (!this.connection.getAutoCommit()) {
+        this.connection.commit();
+      }
+    } catch (SQLException e) {
+      throw new UncheckedSQLException(e);
+    }
   }
 }

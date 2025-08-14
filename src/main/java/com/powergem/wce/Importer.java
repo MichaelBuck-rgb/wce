@@ -42,10 +42,13 @@ public final class Importer {
 
     try {
       try (Statement statement = connection.createStatement()) {
+        connection.setAutoCommit(true);
         statement.execute("PRAGMA synchronous = OFF");
         statement.execute("PRAGMA journal_mode = MEMORY");
         statement.execute("PRAGMA page_size = 1024");
       }
+
+      connection.setAutoCommit(false);
 
       createScenariosTable(worstCaseTrLim.wcResults(), connection);
 
@@ -83,8 +86,8 @@ public final class Importer {
         statement.execute("CREATE INDEX constraints_idx ON constraints (scenarioId, flowgateId)");
         statement.execute("CREATE INDEX line_cost_data_idx ON line_cost_data (scenarioId, id)");
         statement.execute("CREATE INDEX transformer_cost_data_idx ON transformer_cost_data (scenarioId, id)");
+        connection.commit();
       }
-
     } catch (SQLException e) {
       throw new RuntimeException(e);
     }
@@ -111,6 +114,7 @@ public final class Importer {
       });
       statement.executeBatch();
     }
+    connection.commit();
   }
 
   private static void createTransformerCostTable(List<TransformerCostData> transformerCostData, int scenarioId, Connection connection) throws SQLException {
@@ -131,6 +135,7 @@ public final class Importer {
       });
       statement.executeBatch();
     }
+    connection.commit();
   }
 
   private static void createScenariosTable(List<WcResult> wcResults, Connection connection) throws SQLException {
@@ -155,6 +160,7 @@ public final class Importer {
       }
       statement.executeBatch();
     }
+    connection.commit();
   }
 
   private static void createConstraintsTable(List<Flowgate> flowgates, int scenarioId, Connection connection) throws SQLException {
@@ -177,6 +183,7 @@ public final class Importer {
         }
       }
     }
+    connection.commit();
   }
 
   private static WorstCaseTrLim decrypt(WorstCaseTrLim worstCaseTrLim) {
@@ -232,6 +239,7 @@ public final class Importer {
       }
       statement.executeBatch();
     }
+    connection.commit();
   }
 
   private static void createStressGensTable(Collection<StressGen> stressGens, int scenarioId, Connection connection) throws SQLException {
@@ -250,6 +258,7 @@ public final class Importer {
       }
       statement.executeBatch();
     }
+    connection.commit();
   }
 
   private static void createBranchTerminalsTable(Collection<BranchTerminal> branchTerminals, int scenarioId, Connection connection) throws SQLException {
@@ -268,6 +277,7 @@ public final class Importer {
       }
       statement.executeBatch();
     }
+    connection.commit();
   }
 
   private static void createFlowgatesTable(Collection<Flowgate> flowgates, int scenarioId, Connection connection) throws SQLException {
@@ -306,6 +316,7 @@ public final class Importer {
       }
       statement.executeBatch();
     }
+    connection.commit();
   }
 
   private static void createHarmersTable(List<Flowgate> flowgates, int scenarioId, Connection connection) throws SQLException {
@@ -330,6 +341,6 @@ public final class Importer {
         statement.executeBatch();
       }
     }
+    connection.commit();
   }
-
 }

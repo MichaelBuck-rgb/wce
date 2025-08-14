@@ -3,10 +3,12 @@ package com.powergem.sql;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
-public final class UncheckedPreparedStatement implements AutoCloseable{
+public final class UncheckedPreparedStatement implements AutoCloseable {
+  private final UncheckedConnection connection;
   private final PreparedStatement statement;
 
-  public UncheckedPreparedStatement(PreparedStatement statement) {
+  UncheckedPreparedStatement(UncheckedConnection connection, PreparedStatement statement) {
+    this.connection = connection;
     this.statement = statement;
   }
 
@@ -77,5 +79,9 @@ public final class UncheckedPreparedStatement implements AutoCloseable{
     } catch (SQLException e) {
       throw new RuntimeException(e);
     }
+  }
+
+  public UncheckedConnection getConnection() {
+    return this.connection;
   }
 }

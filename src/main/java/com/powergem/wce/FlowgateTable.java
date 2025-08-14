@@ -13,7 +13,7 @@ import java.util.function.Consumer;
 
 import static com.powergem.wce.DataFile.getFlowgateEntity;
 
-public final class FlowgateTable implements AutoCloseable, Iterable<FlowgateEntity> {
+public final class FlowgateTable implements AutoCloseable {
   private static final String UPDATE_TEMPLATE = "UPDATE flowgates SET scenarioId=?, id=?, busid=?, dfax=?, trlim=?, mon=?, con=?, rating=?, loadingbefore=?, equipment_index=? WHERE scenarioId = ? and id = ?";
 
   private final UncheckedConnection connection;
@@ -43,6 +43,7 @@ public final class FlowgateTable implements AutoCloseable, Iterable<FlowgateEnti
     @Override
     public void close() throws Exception {
       this.statement.executeBatch();
+      this.statement.getConnection().commit();
       this.statement.close();
     }
 
@@ -72,6 +73,7 @@ public final class FlowgateTable implements AutoCloseable, Iterable<FlowgateEnti
 
       if (this.counter++ >= this.batchSize) {
         statement.executeBatch();
+        this.statement.getConnection().commit();
         this.counter = 0;
       }
     }
@@ -84,7 +86,11 @@ public final class FlowgateTable implements AutoCloseable, Iterable<FlowgateEnti
   }
 
   @Override
-  public Iterator<FlowgateEntity> iterator() {
+  public void close() {
+
+  }
+
+  public List<FlowgateEntity> toList() {
     List<FlowgateEntity> entities = new ArrayList<>();
     try (UncheckedStatement statement = this.connection.createStatement(); UncheckedResultSet rs = statement.executeQuery("select * from flowgates where scenarioId = " + this.scenarioId)) {
       new FlowgateIterator(rs).forEachRemaining(entities::add);
@@ -93,48 +99,7 @@ public final class FlowgateTable implements AutoCloseable, Iterable<FlowgateEnti
     } catch (Exception e) {
       throw new RuntimeException(e);
     }
-    return entities.iterator();
-  }
-
-  @Override
-  public void close() {
-
-  }
-
-  public void update(FlowgateEntity flowgateEntity) {
-    try (UncheckedPreparedStatement statement = this.connection.prepareStatement(UPDATE_TEMPLATE)) {
-      // todo: don't need to update scenarioId and id
-      statement.setInt(1, this.scenarioId);
-      statement.setInt(2, flowgateEntity.id());
-      statement.setInt(3, flowgateEntity.busid());
-      statement.setDouble(4, flowgateEntity.dfax());
-      statement.setDouble(5, flowgateEntity.trlim());
-      statement.setString(6, flowgateEntity.mon());
-      statement.setString(7, flowgateEntity.con());
-      statement.setDouble(8, flowgateEntity.rating());
-      statement.setDouble(9, flowgateEntity.loadingbefore());
-
-      if (flowgateEntity.equipment_index().isPresent()) {
-        statement.setInt(10, flowgateEntity.equipment_index().get());
-      } else {
-        statement.setNull(10, java.sql.Types.INTEGER);
-      }
-
-      statement.setInt(11, this.scenarioId);
-      statement.setInt(12, flowgateEntity.id());
-
-      statement.executeUpdate();
-    } catch (RuntimeException e) {
-      throw e;
-    } catch (Exception e) {
-      throw new RuntimeException(e);
-    }
-  }
-
-  public List<FlowgateEntity> toList() {
-    List<FlowgateEntity> flowgates = new ArrayList<>();
-    iterator().forEachRemaining(flowgates::add);
-    return flowgates;
+    return entities;
   }
 
   private static final class FlowgateIterator implements Iterator<FlowgateEntity> {

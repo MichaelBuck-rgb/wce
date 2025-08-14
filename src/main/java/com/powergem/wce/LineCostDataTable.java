@@ -22,7 +22,7 @@ public final class LineCostDataTable implements AutoCloseable {
     this.scenarioId = scenarioId;
   }
 
-  public void insert(LineCostDatumEntity lineCostDatumEntity) {
+  public void insertBatch(LineCostDatumEntity lineCostDatumEntity) {
     this.statement.setInt(1, this.scenarioId);
     this.statement.setInt(2, lineCostDatumEntity.id());
     this.statement.setDouble(3, lineCostDatumEntity.length());
@@ -30,7 +30,7 @@ public final class LineCostDataTable implements AutoCloseable {
     this.statement.setDouble(5, lineCostDatumEntity.maxAllowedFlowPerLine());
     this.statement.setDouble(6, lineCostDatumEntity.upgradeCost());
     this.statement.setDouble(7, lineCostDatumEntity.newLineCost());
-    this.statement.executeUpdate();
+    this.statement.addBatch();
   }
 
   @Override
@@ -59,5 +59,9 @@ public final class LineCostDataTable implements AutoCloseable {
     }
 
     return results;
+  }
+
+  public void executeBatch() {
+    this.statement.executeBatch();
   }
 }

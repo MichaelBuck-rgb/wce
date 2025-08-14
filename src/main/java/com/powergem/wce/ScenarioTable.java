@@ -1,11 +1,8 @@
 package com.powergem.wce;
 
 import com.powergem.sql.UncheckedConnection;
-import com.powergem.sql.UncheckedPreparedStatement;
 import com.powergem.sql.UncheckedResultSet;
 import com.powergem.sql.UncheckedStatement;
-import com.powergem.wce.commands.Fuzz;
-import com.powergem.wce.entities.FlowgateEntity;
 import com.powergem.wce.entities.HarmerEntity;
 
 import java.util.ArrayList;
@@ -94,53 +91,4 @@ public final class ScenarioTable implements AutoCloseable {
             montype.stream().mapToInt(Integer::intValue).toArray()
     );
   }
-
-//  private record ConstraintsTuple(int[] frBus, int[] toBus, int[] monType) {
-//  }
-
-//  private ConstraintsTuple getConstraintInfo(int flowgateId) {
-//    List<Integer> frbus = new ArrayList<>();
-//    List<Integer> tobus = new ArrayList<>();
-//    List<Integer> montype = new ArrayList<>();
-//    String query = "select frbus, tobus, montype from constraints where scenarioId = " + this.scenarioId + " and flowgateId = " + flowgateId;
-//    try (UncheckedStatement statement = this.connection.createStatement(); UncheckedResultSet rs = statement.executeQuery(query)) {
-//      while (rs.next()) {
-//        rs.getInt(1).ifPresent(frbus::add);
-//        rs.getInt(2).ifPresent(tobus::add);
-//        rs.getInt(3).ifPresent(montype::add);
-//      }
-//    } catch (RuntimeException e) {
-//      throw e;
-//    } catch (Exception e) {
-//      throw new RuntimeException(e);
-//    }
-//
-//    return new ConstraintsTuple(
-//            frbus.stream().mapToInt(Integer::intValue).toArray(),
-//            tobus.stream().mapToInt(Integer::intValue).toArray(),
-//            montype.stream().mapToInt(Integer::intValue).toArray()
-//    );
-//  }
-
-//  public List<Fuzz.FlowgateEntity2> getFlowgates2() {
-//    List<Fuzz.FlowgateEntity2> results = new ArrayList<>();
-//    for (FlowgateEntity flowgate : getFlowgates()) {
-//      List<HarmerEntity> harmers = getHarmers(flowgate.id());
-//
-//      int[] frBuses;
-//      int[] toBuses;
-//      int[] monType;
-//      {
-//        ConstraintsTuple constraintInfo = getConstraintInfo(flowgate.id());
-//        frBuses = constraintInfo.frBus;
-//        toBuses = constraintInfo.toBus;
-//        monType = constraintInfo.monType;
-//      }
-//
-//      int[] equipmentIndex = flowgate.equipment_index().stream().mapToInt(Integer::intValue).toArray();
-//
-//      results.add(new Fuzz.FlowgateEntity2(flowgate.id(), flowgate.busid(), flowgate.dfax(), flowgate.trlim(), flowgate.mon(), flowgate.con(), flowgate.rating(), flowgate.loadingbefore(), equipmentIndex, harmers, frBuses, toBuses, monType));
-//    }
-//    return results;
-//  }
 }
