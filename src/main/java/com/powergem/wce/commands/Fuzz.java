@@ -16,6 +16,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.Connection;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Callable;
@@ -50,10 +51,12 @@ public final class Fuzz implements Callable<Integer> {
     List<WcResult> wcResults = new ArrayList<>();
 
     try (Connection connection = getConnection(jdbcUrl)) {
+      System.err.printf("[%tT] Loading %s...%n", LocalTime.now(), jsonFile);
       Importer.importData(this.jsonFile, connection);
       try (UncheckedConnection uncheckedConnection = new UncheckedConnection(connection)) {
         try (ScenariosTable scenariosTable = new ScenariosTable(uncheckedConnection)) {
           scenariosTable.scenarios().forEach(scenarioTable -> {
+            System.err.printf("[%tT] Fuzzing scenario %s...%n", LocalTime.now(), scenarioTable.getName());
             try (FlowgateTable flowgateTable = scenarioTable.getFlowgates()) {
               long numberOfFlowgates = flowgateTable.getCount();
 
