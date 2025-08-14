@@ -11,6 +11,7 @@ import picocli.CommandLine;
                 SqliteCommand.class,
                 ListCommand.class,
                 InfoCommand.class,
+                ReindexCommand.class,
                 SearchCommand.class,
                 Fuzz.class
         },

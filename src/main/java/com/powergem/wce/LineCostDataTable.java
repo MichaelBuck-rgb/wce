@@ -2,11 +2,9 @@ package com.powergem.wce;
 
 import com.powergem.sql.UncheckedConnection;
 import com.powergem.sql.UncheckedPreparedStatement;
-import com.powergem.sql.UncheckedResultSet;
 import com.powergem.sql.UncheckedStatement;
 import com.powergem.wce.entities.LineCostDatumEntity;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public final class LineCostDataTable implements AutoCloseable {
@@ -38,27 +36,21 @@ public final class LineCostDataTable implements AutoCloseable {
     this.statement.close();
   }
 
-  public List<LineCostDatumEntity> asList() {
-    List<LineCostDatumEntity> results = new ArrayList<>();
-
-    try (UncheckedStatement statement1 = this.connection.createStatement(); UncheckedResultSet rs = statement1.executeQuery("select * from line_cost_data where scenarioId = " + this.scenarioId)) {
-      LineCostDatumEntity entity = new LineCostDatumEntity(
-              this.scenarioId,
+  public List<LineCostDatumEntity> getLineCostData() {
+    try (UncheckedStatement statement1 = this.connection.createStatement()) {
+      return statement1.executeQuery("select * from line_cost_data where scenarioId = " + this.scenarioId, rs -> new LineCostDatumEntity(
+              LineCostDataTable.this.scenarioId,
               rs.getInt("id").orElseThrow(),
               rs.getDouble("length").orElseThrow(),
               rs.getDouble("max_rating_per_line").orElseThrow(),
               rs.getDouble("max_allowed_flow_per_line").orElseThrow(),
               rs.getDouble("upgrade_cost").orElseThrow(),
-              rs.getDouble("new_line_cost").orElseThrow()
-      );
-      results.add(entity);
+              rs.getDouble("new_line_cost").orElseThrow()));
     } catch (RuntimeException e) {
       throw e;
     } catch (Exception e) {
       throw new RuntimeException(e);
     }
-
-    return results;
   }
 
   public void executeBatch() {

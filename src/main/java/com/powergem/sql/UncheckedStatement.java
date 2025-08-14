@@ -176,7 +176,7 @@ public final class UncheckedStatement implements AutoCloseable {
   public Optional<String> getString(String query) {
     try (UncheckedResultSet rs = executeQuery(query)) {
       if (!rs.next()) {
-        throw new IllegalStateException("No rows returned");
+        return Optional.empty();
       }
       return rs.getString(1);
     } catch (SQLException e) {

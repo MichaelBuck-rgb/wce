@@ -18,7 +18,7 @@ public final class ScenarioTable implements AutoCloseable {
   }
 
   public long getCount() {
-    return this.connection.getLong("select count(*) from scenarios where id = " + this.scenarioId).orElseThrow();
+    return this.connection.getLong("select count(*) from scenarios where scenarioId = " + this.scenarioId).orElseThrow();
   }
 
   public int getScenarioId() {
@@ -26,11 +26,11 @@ public final class ScenarioTable implements AutoCloseable {
   }
 
   public String getName() {
-    return this.connection.getString("select name from scenarios where id = " + this.scenarioId).orElseThrow();
+    return this.connection.getString("select name from scenarios where scenarioId = " + this.scenarioId).orElseThrow();
   }
 
   public String getMode() {
-    return this.connection.getString("select mode from scenarios where id = " + this.scenarioId).orElseThrow();
+    return this.connection.getString("select mode from scenarios where scenarioId = " + this.scenarioId).orElseThrow();
   }
 
   public FlowgateTable getFlowgates() {

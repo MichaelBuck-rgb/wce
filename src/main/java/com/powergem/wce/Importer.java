@@ -140,7 +140,7 @@ public final class Importer {
 
   private static void createScenariosTable(List<WcResult> wcResults, Connection connection) throws SQLException {
     try (Statement statement = connection.createStatement()) {
-      statement.execute("CREATE TABLE scenarios (id INT, version TEXT, name TEXT, mode TEXT)");
+      statement.execute("CREATE TABLE scenarios (scenarioId INT, version TEXT, name TEXT, mode TEXT)");
     }
 
     try (PreparedStatement statement = connection.prepareStatement("INSERT INTO scenarios VALUES(?, ?, ?, ?)")) {

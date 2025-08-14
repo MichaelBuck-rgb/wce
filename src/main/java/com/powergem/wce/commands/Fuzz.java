@@ -9,12 +9,7 @@ import io.avaje.jsonb.JsonType;
 import io.avaje.jsonb.Jsonb;
 import picocli.CommandLine;
 
-import java.io.IOException;
-import java.io.OutputStream;
-import java.io.UncheckedIOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.sql.Connection;
 import java.time.LocalTime;
 import java.util.ArrayList;
@@ -57,7 +52,7 @@ public final class Fuzz implements Callable<Integer> {
       Importer.importData(this.jsonFile, connection);
       try (UncheckedConnection uncheckedConnection = new UncheckedConnection(connection)) {
         try (ScenariosTable scenariosTable = new ScenariosTable(uncheckedConnection)) {
-          scenariosTable.scenarios().forEach(scenarioTable -> {
+          scenariosTable.getScenarioTables().forEach(scenarioTable -> {
             System.err.printf("[%tT] Fuzzing scenario %s...%n", LocalTime.now(), scenarioTable.getName());
             try (FlowgateTable flowgateTable = scenarioTable.getFlowgates()) {
               long numberOfFlowgates = flowgateTable.getCount();
@@ -116,7 +111,7 @@ public final class Fuzz implements Callable<Integer> {
   }
 
 
-  private static WcResult toWcResult(ScenarioTable scenarioTable) {
+  static WcResult toWcResult(ScenarioTable scenarioTable) {
     List<Bus> buses = scenarioTable.getBuses().toList().stream().map(BusMapper.INSTANCE::toBus).toList();
     List<StressGen> stressGens = scenarioTable.getStressgens().toList().stream().map(StressGenMapper.INSTANCE::toStressGen).toList();
     List<Tuple> flowgateTuples = new ArrayList<>();
@@ -130,7 +125,7 @@ public final class Fuzz implements Callable<Integer> {
 
     List<Flowgate> flowgates = flowgateTuples.stream().map(FlowgateMapper.INSTANCE::toFlowgate).toList();
 
-    List<LineCostData> lineCostData = scenarioTable.getLineCostData().asList().stream()
+    List<LineCostData> lineCostData = scenarioTable.getLineCostData().getLineCostData().stream()
             .map(LineCostDatumEntityMapper.INSTANCE::toFlowgate)
             .toList();
 
