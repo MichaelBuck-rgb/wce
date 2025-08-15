@@ -4,16 +4,9 @@ import com.powergem.TableBuilder;
 import com.powergem.sql.*;
 import com.powergem.wce.entities.*;
 import com.powergem.worstcasetrlim.model.*;
-import io.avaje.jsonb.JsonType;
-import io.avaje.jsonb.Jsonb;
 
 import java.sql.SQLException;
 import java.util.*;
-import java.util.stream.Collectors;
-
-import static com.powergem.wce.Utilities.encryptLat;
-import static com.powergem.wce.Utilities.encryptLon;
-import static java.util.stream.Collectors.groupingBy;
 
 public final class DataFile {
   private final UncheckedConnection connection;
@@ -322,73 +315,12 @@ public final class DataFile {
     return buses;
   }
 
-  public void extractBuses(List<Integer> busNums, UncheckedConnection uncheckedConnection) {
-    Map<Integer, List<ScenarioEntity>> scenarioGroups = getScenarios().stream().collect(groupingBy(ScenarioEntity::id));
-
-    Map<Integer, List<BusEntity>> busesGroupedByScenario = getBuses(busNums, uncheckedConnection).stream().collect(groupingBy(BusEntity::scenarioId));
-
-    Map<Integer, List<FlowgateEntity>> flowgatesGroupedByScenario = busesGroupedByScenario.entrySet().stream()
-            .flatMap(entry -> entry.getValue().stream()
-                    .flatMap(busEntity -> getFlowgates(entry.getKey(), busEntity.busnum()).stream()))
-            .collect(groupingBy(FlowgateEntity::scenarioId));
-
-    List<WcResult> wcResults = busesGroupedByScenario.entrySet().stream()
-            .map(entry -> {
-              ScenarioEntity scenarioEntity = scenarioGroups.get(entry.getKey()).getFirst();
-              List<Bus> buses = entry.getValue().stream().map(bus -> {
-                double lon = bus.lon();
-                double lat = bus.lat();
-                double encryptedLat = encryptLat(lat, lon);
-                double encryptedLon = encryptLon(lat, lon);
-                return new Bus(bus.id(), bus.busnum(), bus.busname(), bus.busvolt(), bus.busarea(), bus.trlim(), encryptedLat, encryptedLon);
-              }).toList();
-              return Map.entry(scenarioEntity, buses);
-            })
-            .map(entry -> {
-              ScenarioEntity scenarioEntity = entry.getKey();
-              List<Flowgate> flowgates = flowgatesGroupedByScenario.get(scenarioEntity.id()).stream()
-                      .map(flowgateEntity -> new Flowgate(flowgateEntity.id(), flowgateEntity.busid(), flowgateEntity.dfax(), flowgateEntity.trlim(), flowgateEntity.mon(), flowgateEntity.con(), flowgateEntity.rating(), flowgateEntity.loadingbefore(), flowgateEntity.loadingbefore(), 0, List.of(), null, null, null, null))
-                      .toList();
-              return new WcResult(scenarioEntity.version(), String.valueOf(scenarioEntity.id()), scenarioEntity.name(), entry.getValue(), List.of(), flowgates, List.of(), scenarioEntity.mode(), List.of(), List.of());
-            })
-            .toList();
-
-    WorstCaseTrLim worstCaseTrLim = new WorstCaseTrLim(wcResults);
-
-    Jsonb jsonb = Jsonb.builder().build();
-    JsonType<WorstCaseTrLim> customerType = jsonb.type(WorstCaseTrLim.class);
-    customerType.toJson(worstCaseTrLim, System.out);
-  }
-
   public enum BusOrderBy {
     NONE,
     NUM,
     NAME,
     AREA,
     VOLTAGE,
-  }
-
-  public List<BusEntity> getBuses(List<Integer> busNums, UncheckedConnection uncheckedConnection) {
-    List<BusEntity> buses = new ArrayList<>();
-
-    String inValues = busNums.stream()
-            .map(String::valueOf)
-            .collect(Collectors.joining(","));
-
-    try (UncheckedPreparedStatement statement = uncheckedConnection.prepareStatement(
-            "SELECT * FROM buses WHERE busnum IN (" + inValues + ")")) {
-      try (UncheckedResultSet resultSet = statement.executeQuery()) {
-        while (resultSet.next()) {
-          BusEntity bus = toBus(resultSet);
-          buses.add(bus);
-        }
-      }
-    } catch (RuntimeException e) {
-      throw e;
-    } catch (Exception e) {
-      throw new RuntimeException(e);
-    }
-    return buses;
   }
 
   public List<BusEntity> getBuses(int scenarioId, BusOrderBy orderBy) {
