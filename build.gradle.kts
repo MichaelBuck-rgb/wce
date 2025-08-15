@@ -12,13 +12,18 @@ repositories {
 
 dependencies {
     implementation("io.avaje:avaje-jsonb:3.5")
-    implementation("org.xerial:sqlite-jdbc:3.46.1.0")
-    implementation("info.picocli:picocli:4.7.6")
-    implementation("org.mapstruct:mapstruct:1.6.3")
-
-    annotationProcessor("info.picocli:picocli-codegen:4.7.6")
     annotationProcessor("io.avaje:avaje-jsonb-generator:3.5")
+
+    implementation("org.xerial:sqlite-jdbc:3.46.1.0")
+
+    implementation("info.picocli:picocli:4.7.6")
+    annotationProcessor("info.picocli:picocli-codegen:4.7.6")
+
+    implementation("org.mapstruct:mapstruct:1.6.3")
     annotationProcessor("org.mapstruct:mapstruct-processor:1.6.3")
+
+    compileOnly("io.soabase.record-builder:record-builder-core:47")
+    annotationProcessor("io.soabase.record-builder:record-builder-processor:47")
 
     runtimeOnly("org.slf4j:slf4j-simple:2.0.11")
 
@@ -69,5 +74,6 @@ graalvmNative {
 }
 
 application {
-    applicationDefaultJvmArgs = listOf("-agentlib:native-image-agent=config-output-dir=./src/main/resources/META-INF/native-image/com.powergem/wce")
+    applicationDefaultJvmArgs =
+        listOf("-agentlib:native-image-agent=config-output-dir=./src/main/resources/META-INF/native-image/com.powergem/wce")
 }

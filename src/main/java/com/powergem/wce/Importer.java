@@ -186,7 +186,7 @@ public final class Importer {
     connection.commit();
   }
 
-  private static WorstCaseTrLim decrypt(WorstCaseTrLim worstCaseTrLim) {
+  public static WorstCaseTrLim decrypt(WorstCaseTrLim worstCaseTrLim) {
     List<WcResult> list = worstCaseTrLim.wcResults().stream().map(Importer::decrypt).toList();
     return new WorstCaseTrLim(list);
   }

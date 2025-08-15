@@ -10,6 +10,7 @@ module com.powergem.wce.main {
 
   requires io.avaje.jsonb;
   requires org.mapstruct;
+  requires io.soabase.recordbuilder.core;
 
   // you must define the fully qualified class name of the generated classes. if you use an import statement, compilation will fail
   provides io.avaje.jsonb.spi.JsonbExtension with com.powergem.worstcasetrlim.model.jsonb.GeneratedJsonComponent;

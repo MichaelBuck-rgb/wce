@@ -1,28 +1,20 @@
 package com.powergem.wce.commands;
 
-import com.powergem.sql.UncheckedConnection;
-import com.powergem.wce.Importer;
-import com.powergem.wce.ScenariosTable;
+import com.powergem.worstcasetrlim.Utilities;
+import com.powergem.worstcasetrlim.model.Flowgate;
 import com.powergem.worstcasetrlim.model.WcResult;
 import com.powergem.worstcasetrlim.model.WorstCaseTrLim;
 import io.avaje.jsonb.JsonType;
 import io.avaje.jsonb.Jsonb;
 import picocli.CommandLine;
 
-import java.io.IOException;
-import java.io.OutputStream;
-import java.io.UncheckedIOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.sql.Connection;
-import java.time.LocalTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Callable;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.UnaryOperator;
 
-import static com.powergem.wce.Utils.getConnection;
-import static com.powergem.wce.commands.Fuzz.toWcResult;
+import static com.powergem.wce.Importer.decrypt;
 
 @CommandLine.Command(
         name = "reindex",
@@ -42,42 +34,42 @@ public final class ReindexCommand implements Callable<Integer> {
 
     this.jsonFile = this.jsonFile.normalize().toAbsolutePath();
 
-//    String jdbcUrl = "jdbc:sqlite::memory:";
-    if (Files.exists(Paths.get("reindex.db"))) {
-      Files.delete(Paths.get("reindex.db"));
-    }
-    String jdbcUrl = "jdbc:sqlite:reindex.db";
-    try (Connection connection = getConnection(jdbcUrl)) {
-      connection.setAutoCommit(false);
+    WorstCaseTrLim worstCaseTrLim = Utilities.getWorstCaseTrLim(this.jsonFile);
 
-      System.err.printf("[%tT] Loading %s...%n", LocalTime.now(), jsonFile);
-      Importer.importData(this.jsonFile, connection);
+    worstCaseTrLim = decrypt(worstCaseTrLim);
 
-      List<WcResult> wcResults = new ArrayList<>();
-      try (UncheckedConnection uncheckedConnection = new UncheckedConnection(connection)) {
-        try (ScenariosTable scenariosTable = new ScenariosTable(uncheckedConnection)) {
-          scenariosTable.reIndexScenarios();
-          scenariosTable.getScenarioTables().forEach(scenarioTable -> {
-            WcResult wcResult = toWcResult(scenarioTable);
-            wcResults.add(wcResult);
-          });
-          scenariosTable.reIndexScenarios();
-        }
+    final class ScenarioIndex implements UnaryOperator<WcResult> {
+      private int index = 0;
+
+      @Override
+      public WcResult apply(WcResult wcResult) {
+        return wcResult.withId(String.valueOf(index++));
       }
-
-      WorstCaseTrLim worstCaseTrLim = new WorstCaseTrLim(wcResults);
-
-      Jsonb jsonb = Jsonb.builder().build();
-      JsonType<WorstCaseTrLim> worstCaseTrLimJsonType = jsonb.type(WorstCaseTrLim.class);
-
-    try (OutputStream inputStream = Files.newOutputStream(Paths.get("reindex.json"))) {
-      worstCaseTrLimJsonType.toJson(worstCaseTrLim, inputStream);
-    } catch (IOException e) {
-      throw new UncheckedIOException(e);
     }
-//      worstCaseTrLimJsonType.toJson(worstCaseTrLim, System.out);
 
-      return 0;
-    }
+    List<WcResult> wcResults = worstCaseTrLim.wcResults().stream()
+            .map(new ScenarioIndex())
+            .map(wcResult -> {
+              AtomicInteger index = new AtomicInteger(0);
+              List<Flowgate> reindexedFlowgsates = wcResult.flowgates().stream()
+                      .map(flowgate -> flowgate.withId(index.getAndIncrement()))
+                      .toList();
+              return wcResult.withFlowgates(reindexedFlowgsates);
+            })
+            .toList();
+
+    worstCaseTrLim = new WorstCaseTrLim(wcResults);
+
+    Jsonb jsonb = Jsonb.builder().build();
+    JsonType<WorstCaseTrLim> worstCaseTrLimJsonType = jsonb.type(WorstCaseTrLim.class);
+
+//    try (OutputStream inputStream = Files.newOutputStream(Paths.get("reindex.json"))) {
+//      worstCaseTrLimJsonType.toJson(worstCaseTrLim, inputStream);
+//    } catch (IOException e) {
+//      throw new UncheckedIOException(e);
+//    }
+    worstCaseTrLimJsonType.toJson(worstCaseTrLim, System.out);
+
+    return 0;
   }
 }
