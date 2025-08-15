@@ -13,7 +13,7 @@ import picocli.CommandLine;
                 InfoCommand.class,
                 ReindexCommand.class,
                 SearchCommand.class,
-                Fuzz.class
+                FuzzCommand.class
         },
         mixinStandardHelpOptions = true,
         version = "1.0.0",

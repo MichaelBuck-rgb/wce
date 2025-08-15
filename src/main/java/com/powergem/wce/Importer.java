@@ -93,7 +93,7 @@ public final class Importer {
     }
   }
 
-  private static void createLineCostDataTable(List<LineCostData> lineCostData, int scenarioId, Connection connection) throws SQLException {
+  private static void createLineCostDataTable(List<LineCostDatum> lineCostData, int scenarioId, Connection connection) throws SQLException {
     if (lineCostData == null || lineCostData.isEmpty()) {
       return;
     }
