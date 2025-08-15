@@ -61,16 +61,5 @@ graalvmNative {
             buildArgs.add("-R:MaxHeapSize=512M")
             buildArgs.add("--enable-native-access=ALL-UNNAMED")
         }
-        binaries.all {
-            resources.autodetect()
-        }
     }
-    metadataRepository {
-        enabled.set(true)
-    }
-}
-
-application {
-    applicationDefaultJvmArgs =
-        listOf("-agentlib:native-image-agent=config-output-dir=./src/main/resources/META-INF/native-image/com.powergem/wce")
 }
