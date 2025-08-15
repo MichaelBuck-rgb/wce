@@ -148,7 +148,7 @@ public final class DataFile {
     return new HarmerEntity(
             resultSet.getInt("id").orElseThrow(),
             resultSet.getInt("flowgateId").orElseThrow(),
-            resultSet.getInt("stressGenId").orElseThrow(),
+            resultSet.getInt("idx").orElseThrow(),
             resultSet.getDouble("dfax").orElseThrow(),
             resultSet.getDouble("mwchange").orElseThrow(),
             resultSet.getDouble("mwimpact").orElseThrow(),

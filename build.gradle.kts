@@ -19,9 +19,6 @@ dependencies {
     implementation("info.picocli:picocli:4.7.6")
     annotationProcessor("info.picocli:picocli-codegen:4.7.6")
 
-    implementation("org.mapstruct:mapstruct:1.6.3")
-    annotationProcessor("org.mapstruct:mapstruct-processor:1.6.3")
-
     compileOnly("io.soabase.record-builder:record-builder-core:47")
     annotationProcessor("io.soabase.record-builder:record-builder-processor:47")
 

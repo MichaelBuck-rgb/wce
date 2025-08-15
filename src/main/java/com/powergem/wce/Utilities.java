@@ -89,6 +89,7 @@ public final class Utilities {
   public static String toString(HarmerEntity harmer) {
     LinkedHashMap<String, String> map = new LinkedHashMap<>(6);
     map.put("id", String.valueOf(harmer.id()));
+    map.put("index", String.valueOf(harmer.index()));
     map.put("dfax", String.valueOf(harmer.dfax()));
     map.put("MW Change", String.valueOf(harmer.mwchange()));
     map.put("MW Impact", String.valueOf(harmer.mwimpact()));

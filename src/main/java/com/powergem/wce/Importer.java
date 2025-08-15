@@ -22,7 +22,7 @@ public final class Importer {
   private static final String FLOWGATES_CREATE_TABLE = "CREATE TABLE flowgates (scenarioId INTEGER, id INTEGER, busid INTEGER, dfax REAL, trlim REAL, mon TEXT, con TEXT, rating REAL, loadingbefore REAL, equipment_index INTEGER)";
   private static final String FLOWGATES_INSERT_STATEMENT_TEMPLATE = "INSERT INTO flowgates VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
-  private static final String HARMERS_CREATE_TABLE = "CREATE TABLE harmers (scenarioId INTEGER, id INTEGER, flowgateId INTEGER, stressGenId INTEGER, dfax REAL, mwchange REAL, mwimpact REAL, pmax REAL, pgen REAL)";
+  private static final String HARMERS_CREATE_TABLE = "CREATE TABLE harmers (scenarioId INTEGER, id INTEGER, flowgateId INTEGER, idx INTEGER, dfax REAL, mwchange REAL, mwimpact REAL, pmax REAL, pgen REAL)";
   private static final String HARMERS_INSERT_STATEMENT_TEMPLATE = "INSERT INTO harmers VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
   private static final String CONSTRAINTS_CREATE_TABLE = "CREATE TABLE constraints (scenarioId INTEGER, flowgateid INTEGER, montype INTEGER, frbus INTEGER, tobus INTEGER)";

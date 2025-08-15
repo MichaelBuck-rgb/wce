@@ -5,6 +5,7 @@ import picocli.CommandLine;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.sql.Connection;
 import java.util.concurrent.Callable;
@@ -35,10 +36,9 @@ public final class SqliteCommand implements Callable<Integer> {
 
     this.jsonFile = this.jsonFile.normalize().toAbsolutePath();
 
-    Path parentDir = this.jsonFile.getParent();
     String baseName = this.jsonFile.getFileName().toString();
     int indexOf = baseName.lastIndexOf('.');
-    Path sqliteFile = parentDir.resolve(baseName.substring(0, indexOf) + ".db");
+    Path sqliteFile = Paths.get(baseName.substring(0, indexOf) + ".db");
 
     if (!this.force && Files.exists(sqliteFile)) {
       System.err.println("File " + sqliteFile + " already exists.  Add --force to overwrite.");
