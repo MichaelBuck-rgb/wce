@@ -11,8 +11,8 @@ repositories {
 }
 
 dependencies {
-    implementation("io.avaje:avaje-jsonb:3.5")
-    annotationProcessor("io.avaje:avaje-jsonb-generator:3.5")
+    implementation("io.avaje:avaje-jsonb:3.6")
+    annotationProcessor("io.avaje:avaje-jsonb-generator:3.6")
 
     implementation("org.xerial:sqlite-jdbc:3.46.1.0")
 
