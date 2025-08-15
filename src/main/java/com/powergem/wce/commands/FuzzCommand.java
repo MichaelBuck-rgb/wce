@@ -27,7 +27,6 @@ public final class FuzzCommand implements Callable<Integer> {
 
   @Override
   public Integer call() throws Exception {
-    // todo: should probably check the version and upgrade if needed
     System.setProperty("wce.useAnsi", String.valueOf(!noAnsi));
 
     this.jsonFile = this.jsonFile.normalize().toAbsolutePath();
@@ -54,7 +53,8 @@ public final class FuzzCommand implements Callable<Integer> {
               List<Flowgate> newFlowgates = wcResult.flowgates().stream()
                       .map(flowgate -> {
                         int equipmentIndex = (int) (Math.random() * lineCostData.size());
-                        return flowgate.withEquipmentIndex(new int[]{equipmentIndex});
+                        return flowgate.withEquipmentIndex(new int[]{equipmentIndex})
+                                .withMonType(new int[] {1});
                       })
                       .toList();
 
