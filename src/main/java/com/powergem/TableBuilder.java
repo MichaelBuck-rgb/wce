@@ -1,6 +1,7 @@
 package com.powergem;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public final class TableBuilder {
@@ -26,7 +27,8 @@ public final class TableBuilder {
   }
 
   public TableBuilder addRow(String... cols) {
-    return addRow(List.of(cols));
+    List<String> list = Arrays.stream(cols).map(s -> s == null ? "" : s).toList();
+    return addRow(list);
   }
 
   public void printTable() {
@@ -65,7 +67,7 @@ public final class TableBuilder {
       System.out.println();
     }
 
-    for (List<String> row : rows.subList(1, rows.size())) {
+    for (List<String> row : rows) {
       for (int col = 0; col < columns; col++) {
         String columnValue = row.get(col);
         System.out.print(columnValue);

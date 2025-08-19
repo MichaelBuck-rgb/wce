@@ -1,15 +1,11 @@
 package com.powergem.wce.commands;
 
-import com.powergem.sql.UncheckedConnection;
-import com.powergem.wce.DataFile;
-import com.powergem.wce.Importer;
+import com.powergem.TableBuilder;
+import com.powergem.worstcasetrlim.Utilities;
 import picocli.CommandLine;
 
 import java.nio.file.Path;
-import java.sql.Connection;
 import java.util.concurrent.Callable;
-
-import static com.powergem.wce.Utils.getConnection;
 
 @CommandLine.Command(name = "scenarios")
 public final class ListScenariosCommand implements Callable<Integer> {
@@ -23,14 +19,9 @@ public final class ListScenariosCommand implements Callable<Integer> {
   public Integer call() throws Exception {
     System.setProperty("wce.useAnsi", String.valueOf(!noAnsi));
 
-    String jdbcUrl = "jdbc:sqlite::memory:";
-
-    try (Connection connection = getConnection(jdbcUrl)) {
-      Importer.importData(this.jsonFile, connection);
-
-      DataFile dataFile = new DataFile(new UncheckedConnection(connection));
-      dataFile.getScenarios().forEach(System.out::println);
-    }
+    TableBuilder tableBuilder = new TableBuilder("id", "title", "version", "type");
+    Utilities.getWorstCaseTrLim(this.jsonFile).wcResults().forEach(x -> tableBuilder.addRow(x.id(), x.title(), x.version(), x.type()));
+    tableBuilder.printTable();
 
     return 0;
   }
