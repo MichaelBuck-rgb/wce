@@ -4,7 +4,6 @@ import com.powergem.worstcasetrlim.model.*;
 import picocli.CommandLine;
 
 import java.nio.file.Path;
-import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.function.Predicate;

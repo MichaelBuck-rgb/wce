@@ -3,13 +3,10 @@ package com.powergem.wce.commands;
 import com.powergem.sql.UncheckedConnection;
 import com.powergem.wce.DataFile;
 import com.powergem.wce.Importer;
-import com.powergem.wce.ReportType;
-import com.powergem.wce.Utilities;
 import picocli.CommandLine;
 
 import java.nio.file.Path;
 import java.sql.Connection;
-import java.util.Set;
 import java.util.concurrent.Callable;
 
 import static com.powergem.wce.Utils.getConnection;

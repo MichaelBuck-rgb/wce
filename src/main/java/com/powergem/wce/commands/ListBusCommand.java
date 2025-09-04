@@ -1,20 +1,16 @@
 package com.powergem.wce.commands;
 
-import com.powergem.sql.UncheckedConnection;
-import com.powergem.wce.DataFile;
-import com.powergem.wce.Importer;
 import com.powergem.wce.ReportType;
 import com.powergem.wce.Utilities;
-import com.powergem.wce.entities.BusEntity;
+import com.powergem.worstcasetrlim.model.Bus;
+import com.powergem.worstcasetrlim.model.Flowgate;
+import com.powergem.worstcasetrlim.model.WcResult;
+import com.powergem.worstcasetrlim.model.WorstCaseTrLim;
 import picocli.CommandLine;
 
 import java.nio.file.Path;
-import java.sql.Connection;
 import java.util.*;
 import java.util.concurrent.Callable;
-
-import static com.powergem.wce.Utilities.dumpFlowgate;
-import static com.powergem.wce.Utils.getConnection;
 
 @CommandLine.Command(name = "bus")
 public final class ListBusCommand implements Callable<Integer> {
@@ -31,30 +27,28 @@ public final class ListBusCommand implements Callable<Integer> {
   private boolean noAnsi = false;
 
   @CommandLine.Option(names = {"-X", "--exclude"}, description = "Objects to exclude from the list.")
-  private String exclude = "";
+  private String exclude;
 
   @Override
   public Integer call() throws Exception {
     System.setProperty("wce.useAnsi", String.valueOf(!noAnsi));
 
-    Set<ReportType> exclusions = Utilities.toExclusions(this.exclude);
+    Set<ReportType> exclusions = this.exclude == null ? Collections.emptySet() : Utilities.toExclusions(this.exclude);
 
-    String jdbcUrl = "jdbc:sqlite::memory:";
+    WorstCaseTrLim worstCaseTrLim = com.powergem.worstcasetrlim.Utilities.getWorstCaseTrLim(this.jsonFile);
+    WcResult scenario = worstCaseTrLim.wcResults().stream()
+            .filter(wcResult -> Integer.parseInt(wcResult.id()) == this.scenarioId)
+            .findAny()
+            .orElseThrow();
 
-    try (Connection connection = getConnection(jdbcUrl)) {
-      Importer.importData(this.jsonFile, connection);
+    Bus bus = scenario.buses().stream()
+            .filter(aBus -> aBus.busnum() == this.busNumber)
+            .findAny()
+            .orElseThrow();
 
-      DataFile dataFile = new DataFile(new UncheckedConnection(connection));
-      Optional<BusEntity> optionalBus = dataFile.getBus(this.busNumber, scenarioId);
-      if (optionalBus.isPresent()) {
-        optionalBus.ifPresent(bus -> {
-          System.out.println("[bus] [" + Utilities.toString(bus) + "]");
-          dataFile.getFlowgates(scenarioId, busNumber).forEach(flowgate -> dumpFlowgate(flowgate, dataFile, scenarioId, 2, exclusions));
-        });
-      } else {
-        System.out.println("Bus not found.");
-      }
-    }
+    List<Flowgate> flowgates = scenario.flowgates();
+
+    Utilities.dumpBus(bus, flowgates, exclusions, 0);
 
     return 0;
   }

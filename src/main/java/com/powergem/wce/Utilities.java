@@ -3,13 +3,35 @@ package com.powergem.wce;
 import com.powergem.MonType;
 import com.powergem.wce.entities.*;
 import com.powergem.worstcasetrlim.model.BranchTerminal;
+import com.powergem.worstcasetrlim.model.Bus;
+import com.powergem.worstcasetrlim.model.Flowgate;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static com.powergem.wce.ReportType.FLOWGATES;
+
 public final class Utilities {
 
   private Utilities() {
+  }
+
+  public static void dumpBus(Bus bus, List<Flowgate> flowgates, Set<ReportType> exclusions, int indent) {
+    String strIndent = " ".repeat(indent);
+
+    System.out.printf("%n%s[bus] [%s]%n", strIndent, toString(bus));
+
+    if (!exclusions.contains(FLOWGATES)) {
+      flowgates.stream()
+              .filter(flowgate -> flowgate.busid() == bus.id())
+              .forEach(flowgate -> dumpFlowgate(flowgate, bus.id(), exclusions, indent + 2));
+    }
+  }
+
+  public static void dumpFlowgate(Flowgate flowgate, int scenarioId, Set<ReportType> exclusions, int indent) {
+    String strIndent = " ".repeat(indent);
+
+    System.out.printf("%n%s[Flowgate] [%s]%n", strIndent, toString(flowgate));
   }
 
   public static void dumpFlowgate(FlowgateEntity flowgate, DataFile dataFile, int scenarioId, int indent, Set<ReportType> exclusions) {
@@ -80,6 +102,24 @@ public final class Utilities {
     map.put("trlim", String.valueOf(flowgate.trlim()));
     map.put("mon", "'" + flowgate.mon() + "'");
     map.put("con", "'" + flowgate.con() + "'");
+    map.put("rating", String.format("%.2f", flowgate.rating()));
+    map.put("%load", percentLoad);
+
+    return toString(map);
+  }
+
+  public static String toString(Flowgate flowgate) {
+    String percentLoad = "%.2f".formatted(flowgate.loadingbefore());
+    if (flowgate.loadingbefore() >= 100) {
+      percentLoad = red(percentLoad);
+    }
+
+    LinkedHashMap<String, String> map = new LinkedHashMap<>(6);
+    map.put("id", String.valueOf(flowgate.id()));
+    map.put("dfax", String.valueOf(flowgate.dfax()));
+    map.put("trlim", String.valueOf(flowgate.trlim()));
+    map.put("mon", flowgate.mon().trim());
+    map.put("con", flowgate.con().trim());
     map.put("rating", String.format("%.2f", flowgate.rating()));
     map.put("%load", percentLoad);
 
@@ -162,6 +202,19 @@ public final class Utilities {
             String.valueOf(bus.trlim()),
             toString(bus.lat(), bus.lon())
     ));
+  }
+
+  public static String toString(Bus bus) {
+    LinkedHashMap<String, String> map = new LinkedHashMap<>(6);
+    map.put("id", String.valueOf(bus.id()));
+    map.put("busnum", String.valueOf(bus.busnum()));
+    map.put("busname", "'" + bus.busname() + "'");
+    map.put("busvolt", String.valueOf(bus.busvolt()));
+    map.put("busarea", "'" + bus.busarea() + "'");
+    map.put("trlim", String.valueOf(bus.trlim()));
+    map.put("(lat, lon)", toString(decryptLat(bus.lat(), bus.lon()), decryptLon(bus.lat(), bus.lon())));
+
+    return toString(map);
   }
 
   public static Set<ReportType> toExclusions(String exclude) {
