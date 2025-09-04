@@ -1,8 +1,8 @@
 module com.powergem.wce.main {
   requires info.picocli;
   requires java.sql;
-  requires java.desktop;
-  requires org.xerial.sqlitejdbc;
+//  requires java.desktop;
+//  requires org.xerial.sqlitejdbc;
   requires java.compiler;
 
   opens com.powergem.wce.commands to info.picocli;

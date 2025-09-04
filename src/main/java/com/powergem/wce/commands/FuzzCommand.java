@@ -1,9 +1,10 @@
 package com.powergem.wce.commands;
 
-import com.powergem.wce.*;
-import com.powergem.wce.entities.*;
 import com.powergem.worstcasetrlim.Utilities;
-import com.powergem.worstcasetrlim.model.*;
+import com.powergem.worstcasetrlim.model.Flowgate;
+import com.powergem.worstcasetrlim.model.LineCostDatum;
+import com.powergem.worstcasetrlim.model.WcResult;
+import com.powergem.worstcasetrlim.model.WorstCaseTrLim;
 import io.avaje.jsonb.JsonType;
 import io.avaje.jsonb.Jsonb;
 import picocli.CommandLine;

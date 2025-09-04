@@ -2,7 +2,6 @@ package com.powergem.sql;
 
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.*;
 
 public final class UncheckedStatement implements AutoCloseable {
   private final Statement statement;
